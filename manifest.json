@@ -22,7 +22,11 @@
     "https://www.justwatch.com/*",
     "https://www.ivi.ru/*",
     "https://www.ivi.tv/*",
-    "https://www.kinopoisk.ru/*"
+    "https://www.kinopoisk.ru/*",
+    "https://shikimori.io/*",
+    "https://shikimori.one/*",
+    "https://shiki.one/*",
+    "https://shikimori.me/*"
   ],
   "background": {
     "service_worker": "service-worker.js",
@@ -63,7 +67,11 @@
         "https://www.justwatch.com/*/search*",
         "https://www.ivi.ru/*",
         "https://www.ivi.tv/*",
-        "https://www.kinopoisk.ru/*"
+        "https://www.kinopoisk.ru/*",
+        "https://shikimori.io/*",
+        "https://shikimori.one/*",
+        "https://shiki.one/*",
+        "https://shikimori.me/*"
       ],
       "js": ["content-script.js"],
       "run_at": "document_idle"

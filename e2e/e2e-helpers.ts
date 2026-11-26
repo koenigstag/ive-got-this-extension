@@ -51,6 +51,8 @@ export const fixtureUrls: Record<string, string> = {
   'kinopoisk-movie.html': 'https://www.kinopoisk.ru/film/301/',
   'kinopoisk-series.html': 'https://www.kinopoisk.ru/series/404900/',
   'kinopoisk-russian.html': 'https://www.kinopoisk.ru/film/41519/',
+  'shikimori-tv.html': 'https://shikimori.io/animes/54492-kusuriya-no-hitorigoto',
+  'shikimori-movie.html': 'https://shikimori.io/animes/32281-kimi-no-na-wa',
 };
 
 /** Standard mock responses used across tests. */

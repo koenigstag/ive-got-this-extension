@@ -5,6 +5,7 @@ import { initImdb } from './sites/imdb.js';
 import { initJustWatchSPA } from './sites/justwatch.js';
 import { initIvi } from './sites/ivi.js';
 import { initKinopoisk } from './sites/kinopoisk.js';
+import { initShikimori } from './sites/shikimori.js';
 import { initSearchEngineSidebar, initYandexSearch } from './sites/search-engine.js';
 import { injectStatusIndicator } from './fallback.js';
 import type { CheckMediaResponse, GetConfigResponse } from '../types/messages.js';
@@ -57,6 +58,11 @@ const init = async (): Promise<void> => {
 
   if (site === 'kinopoisk') {
     initKinopoisk();
+    return;
+  }
+
+  if (site === 'shikimori') {
+    initShikimori();
     return;
   }
 

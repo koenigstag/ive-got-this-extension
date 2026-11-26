@@ -70,4 +70,5 @@ export type SourceSite =
   | 'justwatch'
   | 'ivi'
   | 'kinopoisk'
+  | 'shikimori'
   | 'unknown';

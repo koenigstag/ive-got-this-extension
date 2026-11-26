@@ -2,6 +2,7 @@ import { Option } from 'effect';
 import type { DetectedMedia, SourceSite } from '../types/index.js';
 import { getIviTitleSlug } from './content-script-helpers.js';
 import { kinopoiskQueries, readKinopoiskTitle } from './sites/kinopoisk-page.js';
+import { buildShikimoriSearch, readShikimoriAnime } from './sites/shikimori-page.js';
 
 /**
  * Identify the current site from the URL.
@@ -23,6 +24,8 @@ export const identifySite = (url: string): SourceSite => {
   // ivi.ru sends visitors outside Russia to ivi.tv, which runs the same site.
   if (/(^|\.)ivi\.(ru|tv)$/.test(hostname)) return 'ivi';
   if (/^(www\.)?kinopoisk\.ru$/.test(hostname)) return 'kinopoisk';
+  // shikimori.one and shiki.one send visitors to shikimori.io; shikimori.me was an earlier domain.
+  if (/^(www\.)?(shikimori\.(io|one|me)|shiki\.one)$/.test(hostname)) return 'shikimori';
 
   return 'unknown';
 };
@@ -57,6 +60,8 @@ export const detectMedia = (): DetectedMedia | undefined => {
       return detectFromIvi();
     case 'kinopoisk':
       return detectFromKinopoisk();
+    case 'shikimori':
+      return detectFromShikimori();
     default:
       return undefined;
   }
@@ -764,4 +769,21 @@ const detectFromKinopoisk = (): DetectedMedia | undefined => {
   return page.mediaType === 'movie'
     ? { type: 'movie', title, year: page.year }
     : { type: 'series', title, year: page.year };
+};
+
+/**
+ * Detect the anime on a Shikimori anime page (`/animes/<id>-<slug>`). The
+ * title is the first one the card searches with (English, else romaji, else
+ * Russian); OVAs, ONAs and specials count as series, and a sequel's year is
+ * left out because TMDB has the show, not the season.
+ */
+const detectFromShikimori = (): DetectedMedia | undefined => {
+  const anime = readShikimoriAnime(document, window.location.href);
+  if (!anime) return undefined;
+  const search = buildShikimoriSearch(anime);
+  const title = search.queries[0];
+  if (!title) return undefined;
+  return anime.kind === 'movie'
+    ? { type: 'movie', title, year: search.year }
+    : { type: 'series', title, year: search.year };
 };
