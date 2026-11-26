@@ -21,7 +21,8 @@
     "https://yandex.com/*",
     "https://www.justwatch.com/*",
     "https://www.ivi.ru/*",
-    "https://www.ivi.tv/*"
+    "https://www.ivi.tv/*",
+    "https://www.kinopoisk.ru/*"
   ],
   "background": {
     "service_worker": "service-worker.js",
@@ -61,7 +62,8 @@
         "https://www.justwatch.com/*/tv-show/*",
         "https://www.justwatch.com/*/search*",
         "https://www.ivi.ru/*",
-        "https://www.ivi.tv/*"
+        "https://www.ivi.tv/*",
+        "https://www.kinopoisk.ru/*"
       ],
       "js": ["content-script.js"],
       "run_at": "document_idle"
