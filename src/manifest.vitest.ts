@@ -58,6 +58,8 @@ const PAGES = [
   'https://www.netflix.com/de/title/81458416',
   'https://www.ivi.ru/watch/109140',
   'https://www.ivi.ru/watch/himera',
+  'https://shikimori.io/animes/54492-kusuriya-no-hitorigoto',
+  'https://shikimori.one/animes/z32182-mob-psycho-100',
   'https://www.ivi.tv/watch/himera',
 ];
 

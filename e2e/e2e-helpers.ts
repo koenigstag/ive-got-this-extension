@@ -48,6 +48,8 @@ export const fixtureUrls: Record<string, string> = {
   'amazon-series.html': 'https://www.amazon.com/gp/video/detail/B07QJ2J5HP',
   'ivi-movie.html': 'https://www.ivi.ru/watch/109140',
   'ivi-series.html': 'https://www.ivi.ru/watch/himera',
+  'shikimori-tv.html': 'https://shikimori.io/animes/54492-kusuriya-no-hitorigoto',
+  'shikimori-movie.html': 'https://shikimori.io/animes/32281-kimi-no-na-wa',
 };
 
 /** Standard mock responses used across tests. */
