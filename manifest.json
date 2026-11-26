@@ -27,7 +27,8 @@
     "https://shikimori.one/*",
     "https://shiki.one/*",
     "https://shikimori.me/*",
-    "https://www.themoviedb.org/*"
+    "https://www.themoviedb.org/*",
+    "https://www.thetvdb.com/*"
   ],
   "background": {
     "service_worker": "service-worker.js",
@@ -74,7 +75,9 @@
         "https://shiki.one/*",
         "https://shikimori.me/*",
         "https://www.themoviedb.org/movie/*",
-        "https://www.themoviedb.org/tv/*"
+        "https://www.themoviedb.org/tv/*",
+        "https://www.thetvdb.com/series/*",
+        "https://www.thetvdb.com/movies/*"
       ],
       "js": ["content-script.js"],
       "run_at": "document_idle"

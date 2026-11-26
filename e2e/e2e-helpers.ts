@@ -55,6 +55,9 @@ export const fixtureUrls: Record<string, string> = {
   'shikimori-movie.html': 'https://shikimori.io/animes/32281-kimi-no-na-wa',
   'tmdb-tv.html': 'https://www.themoviedb.org/tv/220542-kusuriya-no-hitorigoto',
   'tmdb-movie.html': 'https://www.themoviedb.org/movie/372058-kimi-no-na-wa',
+  'tvdb-series.html': 'https://www.thetvdb.com/series/kusuriya-no-hitorigoto',
+  'tvdb-movie.html': 'https://www.thetvdb.com/movies/your-name',
+  'tvdb-series-no-tmdb.html': 'https://www.thetvdb.com/series/some-local-show',
 };
 
 /** Standard mock responses used across tests. */

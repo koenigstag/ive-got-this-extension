@@ -4,6 +4,7 @@ import { getIviTitleSlug } from './content-script-helpers.js';
 import { kinopoiskQueries, readKinopoiskTitle } from './sites/kinopoisk-page.js';
 import { buildShikimoriSearch, readShikimoriAnime } from './sites/shikimori-page.js';
 import { readTmdbTitle } from './sites/tmdb-page.js';
+import { readTvdbTitle } from './sites/tvdb-page.js';
 
 /**
  * Identify the current site from the URL.
@@ -28,6 +29,7 @@ export const identifySite = (url: string): SourceSite => {
   // shikimori.one and shiki.one send visitors to shikimori.io; shikimori.me was an earlier domain.
   if (/^(www\.)?(shikimori\.(io|one|me)|shiki\.one)$/.test(hostname)) return 'shikimori';
   if (/^(www\.)?themoviedb\.org$/.test(hostname)) return 'tmdb';
+  if (/^(www\.)?thetvdb\.com$/.test(hostname)) return 'tvdb';
 
   return 'unknown';
 };
@@ -66,6 +68,8 @@ export const detectMedia = (): DetectedMedia | undefined => {
       return detectFromShikimori();
     case 'tmdb':
       return detectFromTmdb();
+    case 'tvdb':
+      return detectFromTvdb();
     default:
       return undefined;
   }
@@ -800,5 +804,21 @@ const detectFromTmdb = (): DetectedMedia | undefined => {
   const page = readTmdbTitle(document, window.location.href);
   if (!page?.title) return undefined;
   const common = { title: page.title, year: page.year, tmdbId: String(page.tmdbId) };
+  return page.mediaType === 'movie' ? { type: 'movie', ...common } : { type: 'series', ...common };
+};
+
+/**
+ * Detect the title on a TVDB series or movie page (`/series/<slug>`,
+ * `/movies/<slug>`): the type from the URL, the TMDB id from the page's link
+ * to TMDB, the name and year from the page.
+ */
+const detectFromTvdb = (): DetectedMedia | undefined => {
+  const page = readTvdbTitle(document, window.location.href);
+  if (!page?.title) return undefined;
+  const common = {
+    title: page.title,
+    year: page.year,
+    tmdbId: page.tmdbId ? String(page.tmdbId) : undefined,
+  };
   return page.mediaType === 'movie' ? { type: 'movie', ...common } : { type: 'series', ...common };
 };

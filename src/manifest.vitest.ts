@@ -62,6 +62,8 @@ const PAGES = [
   'https://shikimori.one/animes/z32182-mob-psycho-100',
   'https://www.themoviedb.org/tv/220542-kusuriya-no-hitorigoto',
   'https://www.themoviedb.org/movie/372058-kimi-no-na-wa?language=ru-RU',
+  'https://www.thetvdb.com/series/kusuriya-no-hitorigoto',
+  'https://www.thetvdb.com/movies/your-name',
   'https://www.ivi.tv/watch/himera',
   'https://www.kinopoisk.ru/film/301/',
   'https://www.kinopoisk.ru/series/404900/',

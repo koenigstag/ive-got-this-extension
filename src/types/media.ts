@@ -72,4 +72,5 @@ export type SourceSite =
   | 'kinopoisk'
   | 'shikimori'
   | 'tmdb'
+  | 'tvdb'
   | 'unknown';

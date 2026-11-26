@@ -12,12 +12,12 @@
 
 "I've got this!" is a powerful browser extension designed for self-hosted media enthusiasts. It seamlessly bridges the gap between popular media discovery sites and your personal Emby or Jellyfin server.
 
-As you browse titles on IMDb, Trakt, TMDB, Netflix, Amazon Prime Video, JustWatch, ivi, Kinopoisk, or Shikimori, the extension automatically detects the media and displays its availability status directly on the page. If a movie or show is missing from your collection, its button opens a dialog with what your server and Jellyseerr have, where you request it (for a series, the seasons you pick).
+As you browse titles on IMDb, Trakt, TMDB, TheTVDB, Netflix, Amazon Prime Video, JustWatch, ivi, Kinopoisk, or Shikimori, the extension automatically detects the media and displays its availability status directly on the page. If a movie or show is missing from your collection, its button opens a dialog with what your server and Jellyseerr have, where you request it (for a series, the seasons you pick).
 
 ## Key Features
 
 - **Real-time Detection:** Automatically identifies movies, series, seasons, and episodes on supported platforms.
-- **Deep Integration:** Injects native-feeling UI elements (badges, sidebars, and buttons) into IMDb, Trakt, TMDB, JustWatch, Netflix, Amazon, ivi, Kinopoisk, and Shikimori.
+- **Deep Integration:** Injects native-feeling UI elements (badges, sidebars, and buttons) into IMDb, Trakt, TMDB, TheTVDB, JustWatch, Netflix, Amazon, ivi, Kinopoisk, and Shikimori.
 - **Search Engine Enhancement:** Adds a dedicated media status sidebar to Google, Bing and Yandex (yandex.ru, ya.ru, yandex.com) search results.
 - **One button, one dialog:** Each title, on the sites and in the search sidebar, gets one button (the server name when you have it, otherwise Request) that opens a dialog with the title's state on your server and in Jellyseerr, its requests, and for a series the episodes per season. From there you play it on the server or request a movie or the seasons you pick.
 - **Smart Deep Linking:** Jump directly from a discovery site to the playback page on your own Emby or Jellyfin instance.
