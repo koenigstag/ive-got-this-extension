@@ -24,6 +24,9 @@ export default defineConfig({
       targets: [
         { src: 'manifest.json', dest: '.' },
         { src: 'public/icons/*', dest: 'icons' },
+        // Chrome reads the extension's name and description from _locales (see manifest.json).
+        { src: 'src/i18n/locales/en.json', dest: '_locales/en', rename: 'messages.json' },
+        { src: 'src/i18n/locales/ru.json', dest: '_locales/ru', rename: 'messages.json' },
       ],
     }),
   ],

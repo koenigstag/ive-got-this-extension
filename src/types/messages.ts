@@ -156,6 +156,8 @@ export interface GetConfigResponse {
     readonly jellyseerrUrl: string;
     readonly jellyseerrLocalUrl: string;
     readonly jellyseerrApiKey: string;
+    /** UI language setting (`auto` follows the browser) */
+    readonly language: 'auto' | 'en' | 'ru';
   };
 }
 

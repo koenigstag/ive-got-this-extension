@@ -133,7 +133,8 @@ export const popupViewStyles: CSSResultOrNative[] = [
       letter-spacing: 0.05em;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
       width: 100%;
       padding: var(--space-sm) var(--space-sm);
       background: rgba(0, 0, 0, 0.3);
@@ -150,7 +151,12 @@ export const popupViewStyles: CSSResultOrNative[] = [
       color: rgba(255, 255, 255, 0.3);
     }
 
-    .form-group input:focus {
+    .form-group select option {
+      background: #1e1e2e;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
       border-color: rgba(255, 255, 255, 0.5);
     }
 

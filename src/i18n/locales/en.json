@@ -1,0 +1,360 @@
+{
+  "extName": {
+    "message": "I've got this!"
+  },
+  "extDescription": {
+    "message": "Check if movies and TV shows on IMDb, Trakt, Netflix, and more are on your Emby/Jellyfin server. Integrated with Jellyseerr."
+  },
+  "poweredBy": {
+    "message": "Powered by Jellyseerr · $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "serverStatus": {
+    "message": "$SERVER$ Status",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "typeMovie": {
+    "message": "Movie"
+  },
+  "typeTvShow": {
+    "message": "TV Show"
+  },
+  "statusAvailable": {
+    "message": "Available"
+  },
+  "statusPartial": {
+    "message": "Partial"
+  },
+  "statusPending": {
+    "message": "Pending"
+  },
+  "statusProcessing": {
+    "message": "Processing"
+  },
+  "statusUnknown": {
+    "message": "Unknown"
+  },
+  "statusNotRequested": {
+    "message": "Not in library"
+  },
+  "playOnServer": {
+    "message": "Play on $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "playOnServerPartial": {
+    "message": "Play on $SERVER$ (partial)",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "playNow": {
+    "message": "Play now"
+  },
+  "manageInJellyseerr": {
+    "message": "Manage in Jellyseerr"
+  },
+  "request": {
+    "message": "Request"
+  },
+  "requestOnServer": {
+    "message": "Request on $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestWith": {
+    "message": "Request with $SERVICE$",
+    "placeholders": {
+      "service": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestViaJellyseerr": {
+    "message": "Request via Jellyseerr"
+  },
+  "requestYouCan": {
+    "message": "You can request this via Jellyseerr."
+  },
+  "requestPending": {
+    "message": "Request Pending"
+  },
+  "requesting": {
+    "message": "Requesting…"
+  },
+  "requested": {
+    "message": "Requested!"
+  },
+  "requestedOnServer": {
+    "message": "Requested on $SERVER$!",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestFailed": {
+    "message": "Failed"
+  },
+  "requestFailedRetry": {
+    "message": "Failed — click to retry"
+  },
+  "alertRequested": {
+    "message": "Successfully requested \"$TITLE$\" via Jellyseerr!",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "alertRequestFailed": {
+    "message": "Failed to request \"$TITLE$\": $REASON$",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "reason": {
+        "content": "$2"
+      }
+    }
+  },
+  "unknownError": {
+    "message": "Unknown error"
+  },
+  "availableOnServer": {
+    "message": "Available on $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "availableOnServerPartial": {
+    "message": "Available (Partial) on $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "serverPartial": {
+    "message": "$SERVER$ (Partial)",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "notOnServerYet": {
+    "message": "Not on $SERVER$ yet",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "setUpServer": {
+    "message": "Set up $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "jellyseerrNotConfigured": {
+    "message": "Jellyseerr not configured"
+  },
+  "jellyseerrNotConfiguredPopup": {
+    "message": "Open the extension popup to set your Jellyseerr URL and API key."
+  },
+  "jellyseerrNotConfiguredSettings": {
+    "message": "Set your Jellyseerr URL and API key in the extension settings."
+  },
+  "connectionError": {
+    "message": "Connection error"
+  },
+  "noResults": {
+    "message": "No results"
+  },
+  "notFoundOnJellyseerr": {
+    "message": "\"$QUERY$\" was not found on Jellyseerr.",
+    "placeholders": {
+      "query": {
+        "content": "$1"
+      }
+    }
+  },
+  "extensionSettings": {
+    "message": "Extension settings"
+  },
+  "openSettings": {
+    "message": "Open settings"
+  },
+  "badgeAvailableOnTheServer": {
+    "message": "Available on Server"
+  },
+  "badgePartiallyAvailable": {
+    "message": "Partially Available"
+  },
+  "badgeConfigureExtension": {
+    "message": "Configure Extension"
+  },
+  "badgeChecking": {
+    "message": "Checking..."
+  },
+  "badgeError": {
+    "message": "Error: $MESSAGE$",
+    "placeholders": {
+      "message": {
+        "content": "$1"
+      }
+    }
+  },
+  "badgeOpenTitleOnServer": {
+    "message": "Open $TITLE$ on your server",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "badgeRequestTitle": {
+    "message": "Request $TITLE$ via Jellyseerr",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupSubtitle": {
+    "message": "Configure your server connection"
+  },
+  "popupLanguage": {
+    "message": "Language"
+  },
+  "popupLanguageAuto": {
+    "message": "Browser language"
+  },
+  "popupServerType": {
+    "message": "Server Type"
+  },
+  "popupConnection": {
+    "message": "Connection"
+  },
+  "popupLocalUrl": {
+    "message": "Local / LAN URL (preferred)"
+  },
+  "popupLocalUrlHint": {
+    "message": "Used when your device is on the same network as your server."
+  },
+  "popupJellyseerrLocalUrlHint": {
+    "message": "Used when your device is on the same network as Jellyseerr."
+  },
+  "popupProbe": {
+    "message": "Probe Local URL"
+  },
+  "popupProbing": {
+    "message": "Probing..."
+  },
+  "popupPublicUrl": {
+    "message": "Public URL (fallback)"
+  },
+  "popupPublicUrlHint": {
+    "message": "Used when the local URL is unreachable (e.g. away from home)."
+  },
+  "popupApiKey": {
+    "message": "API Key"
+  },
+  "popupApiKeyPlaceholder": {
+    "message": "Enter your API key"
+  },
+  "popupJellyseerrApiKeyPlaceholder": {
+    "message": "Enter Jellyseerr API key"
+  },
+  "popupTestConnection": {
+    "message": "Test Connection"
+  },
+  "popupTesting": {
+    "message": "Testing..."
+  },
+  "popupConnected": {
+    "message": "Connected successfully!"
+  },
+  "popupConnectionFailed": {
+    "message": "Connection failed. Check URL and API key."
+  },
+  "popupTestingConnection": {
+    "message": "Testing connection..."
+  },
+  "popupLocalReachable": {
+    "message": "Local server reachable!"
+  },
+  "popupLocalUnreachable": {
+    "message": "Local server not reachable — will use public URL."
+  },
+  "popupProbingLocal": {
+    "message": "Probing local server..."
+  },
+  "popupTestJellyseerr": {
+    "message": "Test Jellyseerr"
+  },
+  "popupJellyseerrConnected": {
+    "message": "Jellyseerr connected!"
+  },
+  "popupJellyseerrFailed": {
+    "message": "Jellyseerr connection failed."
+  },
+  "popupTestingJellyseerr": {
+    "message": "Testing Jellyseerr..."
+  },
+  "popupSave": {
+    "message": "Save Settings"
+  },
+  "popupSaved": {
+    "message": "Settings saved!"
+  },
+  "popupSaveFailed": {
+    "message": "Failed to save settings."
+  },
+  "swJellyseerrDisabled": {
+    "message": "Jellyseerr is not enabled"
+  },
+  "swJellyseerrDisabledConfigure": {
+    "message": "Jellyseerr is not enabled. Configure it in the extension popup."
+  },
+  "swMediaNotFound": {
+    "message": "Could not find media on Jellyseerr"
+  },
+  "swRequestSubmitted": {
+    "message": "Request submitted successfully to $URL$!",
+    "placeholders": {
+      "url": {
+        "content": "$1"
+      }
+    }
+  },
+  "swCsrfHint": {
+    "message": "Fix: Go to $URL$/settings/network and disable \"Enable CSRF Protection\".",
+    "placeholders": {
+      "url": {
+        "content": "$1"
+      }
+    }
+  }
+}

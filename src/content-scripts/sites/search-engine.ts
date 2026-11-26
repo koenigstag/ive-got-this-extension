@@ -1,6 +1,7 @@
 import { sendMessage, injectSkeletonKeyframes, COMBINED_SVG } from '../common-ui.js';
 import { tryDetectMedia, identifySite } from '../index.js';
 import type { SearchJellyseerrResponse, GetConfigResponse } from '../../types/messages.js';
+import { t } from '../../i18n/index.js';
 // Chrome gives content scripts no custom element registry (`customElements` is null in the
 // isolated world). The polyfill installs one for this world only, so <search-sidebar> can
 // register and render; where a native registry exists it does nothing.
@@ -67,7 +68,7 @@ const showSkeleton = (serverLabel: string): void => {
       </div>
     </div>
     <div>
-      <div style="font-size:11px;color:#a89cc0;margin-bottom:8px;">Powered by Jellyseerr &middot; ${serverLabel}</div>
+      <div style="font-size:11px;color:#a89cc0;margin-bottom:8px;">${t('poweredBy', serverLabel)}</div>
     </div>
     <div style="display:flex;gap:12px;align-items:flex-start;">
       <div style="width:60px;height:90px;border-radius:8px;flex-shrink:0;${shimmerStyle}"></div>
@@ -185,20 +186,23 @@ export const tryInjectSearchEngineCard = (
       <div style="width:32px;height:32px;flex-shrink:0;">${COMBINED_SVG.replace(/width="48" height="48"/, 'width="32" height="32"')}</div>
       <div>
         <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${serverLabel} Status</div>
+        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('serverStatus', serverLabel)}</div>
       </div>
     </div>
   `;
 
   let contentHtml = '';
   if (status === 'available' || status === 'partial') {
-    const label = status === 'partial' ? 'Available (Partial)' : 'Available';
+    const availableText =
+      status === 'partial'
+        ? t('availableOnServerPartial', serverLabel)
+        : t('availableOnServer', serverLabel);
     contentHtml = `
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:24px;">✅</div>
         <div>
-          <div style="font-weight:600;">${label} on ${serverLabel}</div>
-          <a href="${itemUrl}" target="_blank" style="color:#d0bcff;text-decoration:underline;font-size:13px;">Play now</a>
+          <div style="font-weight:600;">${availableText}</div>
+          <a href="${itemUrl}" target="_blank" style="color:#d0bcff;text-decoration:underline;font-size:13px;">${t('playNow')}</a>
         </div>
       </div>
     `;
@@ -207,8 +211,8 @@ export const tryInjectSearchEngineCard = (
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:24px;">🚀</div>
         <div>
-          <div style="font-weight:600;">Not on ${serverLabel} yet</div>
-          <div style="font-size:13px;color:#a89cc0;">Request via Jellyseerr</div>
+          <div style="font-weight:600;">${t('notOnServerYet', serverLabel)}</div>
+          <div style="font-size:13px;color:#a89cc0;">${t('requestViaJellyseerr')}</div>
         </div>
       </div>
     `;

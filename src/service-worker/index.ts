@@ -13,6 +13,7 @@ import {
   requestTvShowEffect,
 } from '../utils/jellyseerr-client.js';
 import { resolveJellyseerrUrlEffect } from '../utils/url-resolver.js';
+import { setLanguage, t } from '../i18n/index.js';
 import { chromeOpenSettingsDeps, openSettingsEffect } from './open-settings.js';
 import type { ExtensionConfig } from '../types/index.js';
 import type {
@@ -158,11 +159,12 @@ const handleCheckMedia = (message: CheckMediaMessage): Effect.Effect<unknown> =>
 const handleRequestMedia = (message: RequestMediaMessage): Effect.Effect<unknown> =>
   Effect.gen(function* () {
     const config = yield* loadConfigEffect;
+    setLanguage(config.ui?.language);
 
     if (!config.jellyseerr.enabled) {
       return {
         type: 'REQUEST_MEDIA_RESPONSE',
-        payload: { success: false, message: 'Jellyseerr is not enabled' },
+        payload: { success: false, message: t('swJellyseerrDisabled') },
       };
     }
 
@@ -208,7 +210,7 @@ const handleRequestMedia = (message: RequestMediaMessage): Effect.Effect<unknown
             type: 'REQUEST_MEDIA_RESPONSE',
             payload: {
               success: false,
-              message: 'Could not find media on Jellyseerr',
+              message: t('swMediaNotFound'),
             },
           };
         }
@@ -232,7 +234,7 @@ const handleRequestMedia = (message: RequestMediaMessage): Effect.Effect<unknown
         type: 'REQUEST_MEDIA_RESPONSE',
         payload: {
           success: true,
-          message: `Request submitted successfully to ${resolvedJellyseerrUrl}!`,
+          message: t('swRequestSubmitted', resolvedJellyseerrUrl),
         },
       };
     }).pipe(
@@ -251,9 +253,7 @@ const handleRequestMedia = (message: RequestMediaMessage): Effect.Effect<unknown
             `[Media Connector] ⚠️ CSRF error! Disable CSRF protection at: ${resolvedJellyseerrUrl}/settings/network`,
           );
         }
-        const csrfHint = isCsrf
-          ? `\n\n💡 Fix: Go to ${resolvedJellyseerrUrl}/settings/network and disable "Enable CSRF Protection".`
-          : '';
+        const csrfHint = isCsrf ? `\n\n💡 ${t('swCsrfHint', resolvedJellyseerrUrl)}` : '';
         return Effect.succeed({
           type: 'REQUEST_MEDIA_RESPONSE',
           payload: {
@@ -330,6 +330,7 @@ const handleGetConfig = (): Effect.Effect<unknown> =>
         jellyseerrUrl: config.jellyseerr.serverUrl,
         jellyseerrLocalUrl: config.jellyseerr.localServerUrl,
         jellyseerrApiKey: config.jellyseerr.apiKey,
+        language: config.ui?.language ?? 'auto',
       },
     };
   }).pipe(
@@ -393,6 +394,7 @@ const handleTestJellyseerr = (): Effect.Effect<unknown> =>
 const handleSearchJellyseerr = (message: SearchJellyseerrMessage): Effect.Effect<unknown> =>
   Effect.gen(function* () {
     const config = yield* loadConfigEffect;
+    setLanguage(config.ui?.language);
 
     if (!config.jellyseerr.enabled) {
       return {
@@ -401,7 +403,7 @@ const handleSearchJellyseerr = (message: SearchJellyseerrMessage): Effect.Effect
           results: [],
           jellyseerrEnabled: false,
           serverType: config.server.serverType,
-          error: 'Jellyseerr is not enabled. Configure it in the extension popup.',
+          error: t('swJellyseerrDisabledConfigure'),
         },
       };
     }

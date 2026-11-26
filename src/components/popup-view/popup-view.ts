@@ -11,7 +11,8 @@ import { embyIcon } from '../../assets/emby-icon.svg.js';
 import { jellyfinIcon } from '../../assets/jellyfin-icon.svg.js';
 import { jellyseerrIcon } from '../../assets/jellyseerr-icon.svg.js';
 import { combinedIcon } from '../../assets/combined-icon.svg.js';
-import type { ServerType, ExtensionConfig } from '../../types/index.js';
+import type { ServerType, ExtensionConfig, UiLanguage } from '../../types/index.js';
+import { setLanguage, t } from '../../i18n/index.js';
 
 type ConnectionStatus = 'idle' | 'testing' | 'success' | 'error';
 type LocalUrlStatus = 'idle' | 'probing' | 'reachable' | 'unreachable';
@@ -68,6 +69,10 @@ export class PopupView extends ComponentMixin(LitElement) {
   @state()
   private _saveStatus: 'idle' | 'saved' | 'error' = 'idle';
 
+  /** UI language setting; the popup switches as soon as it changes and keeps it on Save. */
+  @state()
+  private _language: UiLanguage = 'auto';
+
   override connectedCallback(): void {
     super.connectedCallback();
     this._loadSettings();
@@ -84,6 +89,8 @@ export class PopupView extends ComponentMixin(LitElement) {
     this._jellyseerrUrl = config.jellyseerr.serverUrl;
     this._jellyseerrLocalUrl = config.jellyseerr.localServerUrl;
     this._jellyseerrApiKey = config.jellyseerr.apiKey;
+    this._language = config.ui?.language ?? 'auto';
+    setLanguage(this._language);
   }
 
   private _buildConfig(): ExtensionConfig {
@@ -100,7 +107,15 @@ export class PopupView extends ComponentMixin(LitElement) {
         localServerUrl: this._jellyseerrLocalUrl,
         apiKey: this._jellyseerrApiKey,
       },
+      ui: {
+        language: this._language,
+      },
     };
+  }
+
+  private _onLanguageChange(e: Event): void {
+    this._language = (e.target as HTMLSelectElement).value as UiLanguage;
+    setLanguage(this._language);
   }
 
   private async _handleSave(): Promise<void> {
@@ -272,8 +287,9 @@ export class PopupView extends ComponentMixin(LitElement) {
   render() {
     return html`
       <div class="popup-container">
-        ${this._renderHeader()} ${this._renderServerSection()} ${this._renderConnectionSection()}
-        ${this._renderJellyseerrSection()} ${this._renderActions()} ${this._renderFooter()}
+        ${this._renderHeader()} ${this._renderLanguageSection()} ${this._renderServerSection()}
+        ${this._renderConnectionSection()} ${this._renderJellyseerrSection()}
+        ${this._renderActions()} ${this._renderFooter()}
       </div>
     `;
   }
@@ -284,7 +300,25 @@ export class PopupView extends ComponentMixin(LitElement) {
         <div class="header-icon">${combinedIcon(28)}</div>
         <div>
           <h1>I've got this!</h1>
-          <p>Configure your server connection</p>
+          <p>${t('popupSubtitle')}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderLanguageSection() {
+    // Language names stay in their own language, so they can be found whatever is selected.
+    return html`
+      <div class="section">
+        <div class="form-group">
+          <label for="ui-language">${t('popupLanguage')}</label>
+          <select id="ui-language" @change="${this._onLanguageChange}">
+            <option value="auto" ?selected="${this._language === 'auto'}">
+              ${t('popupLanguageAuto')}
+            </option>
+            <option value="en" ?selected="${this._language === 'en'}">English</option>
+            <option value="ru" ?selected="${this._language === 'ru'}">Русский</option>
+          </select>
         </div>
       </div>
     `;
@@ -293,7 +327,7 @@ export class PopupView extends ComponentMixin(LitElement) {
   private _renderServerSection() {
     return html`
       <div class="section">
-        <div class="section-title">Server Type</div>
+        <div class="section-title">${t('popupServerType')}</div>
         <div class="server-toggle">
           <button
             class="${this.serverType === 'emby' ? 'active' : ''}"
@@ -315,9 +349,9 @@ export class PopupView extends ComponentMixin(LitElement) {
   private _renderConnectionSection() {
     return html`
       <div class="section" part="settings">
-        <div class="section-title">Connection</div>
+        <div class="section-title">${t('popupConnection')}</div>
         <div class="form-group">
-          <label for="local-server-url">Local / LAN URL (preferred)</label>
+          <label for="local-server-url">${t('popupLocalUrl')}</label>
           <input
             id="local-server-url"
             type="url"
@@ -327,20 +361,18 @@ export class PopupView extends ComponentMixin(LitElement) {
               this._localServerUrl = (e.target as HTMLInputElement).value;
             }}"
           />
-          <span class="form-hint">
-            Used when your device is on the same network as your server.
-          </span>
+          <span class="form-hint">${t('popupLocalUrlHint')}</span>
           <button
             class="btn btn-probe"
             @click="${this._handleProbeLocalUrl}"
             ?disabled="${this._localUrlStatus === 'probing' || !this._localServerUrl}"
           >
-            ${this._localUrlStatus === 'probing' ? 'Probing...' : 'Probe Local URL'}
+            ${this._localUrlStatus === 'probing' ? t('popupProbing') : t('popupProbe')}
           </button>
           ${this._renderProbeStatus(this._localUrlStatus)}
         </div>
         <div class="form-group">
-          <label for="server-url">Public URL (fallback)</label>
+          <label for="server-url">${t('popupPublicUrl')}</label>
           <input
             id="server-url"
             type="url"
@@ -350,16 +382,14 @@ export class PopupView extends ComponentMixin(LitElement) {
               this._serverUrl = (e.target as HTMLInputElement).value;
             }}"
           />
-          <span class="form-hint">
-            Used when the local URL is unreachable (e.g. away from home).
-          </span>
+          <span class="form-hint">${t('popupPublicUrlHint')}</span>
         </div>
         <div class="form-group">
-          <label for="api-key">API Key</label>
+          <label for="api-key">${t('popupApiKey')}</label>
           <input
             id="api-key"
             type="password"
-            placeholder="Enter your API key"
+            placeholder="${t('popupApiKeyPlaceholder')}"
             .value="${this._apiKey}"
             @input="${(e: Event) => {
               this._apiKey = (e.target as HTMLInputElement).value;
@@ -371,7 +401,7 @@ export class PopupView extends ComponentMixin(LitElement) {
           @click="${this._handleTestConnection}"
           ?disabled="${this._connectionStatus === 'testing'}"
         >
-          ${this._connectionStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+          ${this._connectionStatus === 'testing' ? t('popupTesting') : t('popupTestConnection')}
         </button>
         ${this._renderConnectionStatus()}
       </div>
@@ -380,28 +410,30 @@ export class PopupView extends ComponentMixin(LitElement) {
 
   private _renderConnectionStatus() {
     if (this._connectionStatus === 'success') {
-      return html`<div class="status status-success">Connected successfully!</div>`;
+      return html`<div class="status status-success">${t('popupConnected')}</div>`;
     }
     if (this._connectionStatus === 'error') {
-      return html`<div class="status status-error">Connection failed. Check URL and API key.</div>`;
+      return html`<div class="status status-error">${t('popupConnectionFailed')}</div>`;
     }
     if (this._connectionStatus === 'testing') {
-      return html`<div class="status status-loading">Testing connection...</div>`;
+      return html`<div class="status status-loading">${t('popupTestingConnection')}</div>`;
     }
     return nothing;
   }
 
   private _renderProbeStatus(status: LocalUrlStatus) {
     if (status === 'reachable') {
-      return html`<div class="status status-success status-inline">Local server reachable!</div>`;
+      return html`<div class="status status-success status-inline">
+        ${t('popupLocalReachable')}
+      </div>`;
     }
     if (status === 'unreachable') {
       return html`<div class="status status-error status-inline">
-        Local server not reachable — will use public URL.
+        ${t('popupLocalUnreachable')}
       </div>`;
     }
     if (status === 'probing') {
-      return html`<div class="status status-loading status-inline">Probing local server...</div>`;
+      return html`<div class="status status-loading status-inline">${t('popupProbingLocal')}</div>`;
     }
     return nothing;
   }
@@ -424,7 +456,7 @@ export class PopupView extends ComponentMixin(LitElement) {
         ${this._jellyseerrEnabled
           ? html`
               <div class="form-group">
-                <label for="jellyseerr-local-url">Local / LAN URL (preferred)</label>
+                <label for="jellyseerr-local-url">${t('popupLocalUrl')}</label>
                 <input
                   id="jellyseerr-local-url"
                   type="url"
@@ -434,21 +466,21 @@ export class PopupView extends ComponentMixin(LitElement) {
                     this._jellyseerrLocalUrl = (e.target as HTMLInputElement).value;
                   }}"
                 />
-                <span class="form-hint">
-                  Used when your device is on the same network as Jellyseerr.
-                </span>
+                <span class="form-hint">${t('popupJellyseerrLocalUrlHint')}</span>
                 <button
                   class="btn btn-probe"
                   @click="${this._handleProbeJellyseerrLocalUrl}"
                   ?disabled="${this._jellyseerrLocalUrlStatus === 'probing' ||
                   !this._jellyseerrLocalUrl}"
                 >
-                  ${this._jellyseerrLocalUrlStatus === 'probing' ? 'Probing...' : 'Probe Local URL'}
+                  ${this._jellyseerrLocalUrlStatus === 'probing'
+                    ? t('popupProbing')
+                    : t('popupProbe')}
                 </button>
                 ${this._renderProbeStatus(this._jellyseerrLocalUrlStatus)}
               </div>
               <div class="form-group">
-                <label for="jellyseerr-url">Public URL (fallback)</label>
+                <label for="jellyseerr-url">${t('popupPublicUrl')}</label>
                 <input
                   id="jellyseerr-url"
                   type="url"
@@ -458,16 +490,14 @@ export class PopupView extends ComponentMixin(LitElement) {
                     this._jellyseerrUrl = (e.target as HTMLInputElement).value;
                   }}"
                 />
-                <span class="form-hint">
-                  Used when the local URL is unreachable (e.g. away from home).
-                </span>
+                <span class="form-hint">${t('popupPublicUrlHint')}</span>
               </div>
               <div class="form-group">
-                <label for="jellyseerr-api-key">API Key</label>
+                <label for="jellyseerr-api-key">${t('popupApiKey')}</label>
                 <input
                   id="jellyseerr-api-key"
                   type="password"
-                  placeholder="Enter Jellyseerr API key"
+                  placeholder="${t('popupJellyseerrApiKeyPlaceholder')}"
                   .value="${this._jellyseerrApiKey}"
                   @input="${(e: Event) => {
                     this._jellyseerrApiKey = (e.target as HTMLInputElement).value;
@@ -479,7 +509,9 @@ export class PopupView extends ComponentMixin(LitElement) {
                 @click="${this._handleTestJellyseerr}"
                 ?disabled="${this._jellyseerrStatus === 'testing'}"
               >
-                ${this._jellyseerrStatus === 'testing' ? 'Testing...' : 'Test Jellyseerr'}
+                ${this._jellyseerrStatus === 'testing'
+                  ? t('popupTesting')
+                  : t('popupTestJellyseerr')}
               </button>
               ${this._renderJellyseerrStatus()}
             `
@@ -490,25 +522,25 @@ export class PopupView extends ComponentMixin(LitElement) {
 
   private _renderJellyseerrStatus() {
     if (this._jellyseerrStatus === 'success') {
-      return html`<div class="status status-success">Jellyseerr connected!</div>`;
+      return html`<div class="status status-success">${t('popupJellyseerrConnected')}</div>`;
     }
     if (this._jellyseerrStatus === 'error') {
-      return html`<div class="status status-error">Jellyseerr connection failed.</div>`;
+      return html`<div class="status status-error">${t('popupJellyseerrFailed')}</div>`;
     }
     if (this._jellyseerrStatus === 'testing') {
-      return html`<div class="status status-loading">Testing Jellyseerr...</div>`;
+      return html`<div class="status status-loading">${t('popupTestingJellyseerr')}</div>`;
     }
     return nothing;
   }
 
   private _renderActions() {
     return html`
-      <button class="btn btn-success" @click="${this._handleSave}">Save Settings</button>
+      <button class="btn btn-success" @click="${this._handleSave}">${t('popupSave')}</button>
       ${this._saveStatus === 'saved'
-        ? html`<div class="status status-success">Settings saved!</div>`
+        ? html`<div class="status status-success">${t('popupSaved')}</div>`
         : nothing}
       ${this._saveStatus === 'error'
-        ? html`<div class="status status-error">Failed to save settings.</div>`
+        ? html`<div class="status status-error">${t('popupSaveFailed')}</div>`
         : nothing}
     `;
   }
