@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Some Local Show - TheTVDB.com</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+        background: #293a36;
+        color: #fff;
+      }
+      .container {
+        width: 1170px;
+        margin: 0 auto;
+        padding: 0 15px;
+        box-sizing: border-box;
+      }
+      .row {
+        display: flex;
+        margin: 0 -15px;
+      }
+      .row.mt-2 {
+        min-height: 386px;
+      }
+      .poster {
+        width: 263px;
+        height: 386px;
+        background: #445;
+        margin: 0 15px;
+      }
+      .block {
+        padding: 15px;
+        background: #2f433e;
+      }
+      .list-group {
+        list-style: none;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Synthetic page with the structure of a TheTVDB series page (thetvdb.com). -->
+    <div class="container">
+      <div class="flash-message"></div>
+      <div class="row mt-2">
+        <div class="poster"></div>
+        <div class="col-xs-12 col-sm-8 col-md-8 col-lg-9 col-xl-10">
+          <h1 class="translated_title mt-0" id="series_title">Some Local Show</h1>
+          <div id="translations" class="block">Overview.</div>
+        </div>
+      </div>
+      <div>
+        <ul class="nav nav-tabs">
+          <li class="active"><a href="#general">General</a></li>
+        </ul>
+        <div class="tab-content">
+          <div id="general" class="tab-pane active">
+            <div id="series_basic_info" class="block">
+              <ul class="list-group">
+                <li class="list-group-item clearfix">
+                  <strong>First Aired</strong><span>March 1, 2024</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -60,6 +60,8 @@ const PAGES = [
   'https://www.ivi.ru/watch/himera',
   'https://www.themoviedb.org/tv/220542-kusuriya-no-hitorigoto',
   'https://www.themoviedb.org/movie/372058-kimi-no-na-wa?language=ru-RU',
+  'https://www.thetvdb.com/series/kusuriya-no-hitorigoto',
+  'https://www.thetvdb.com/movies/your-name',
   'https://www.ivi.tv/watch/himera',
 ];
 
