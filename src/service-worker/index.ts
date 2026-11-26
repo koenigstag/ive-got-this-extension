@@ -13,6 +13,8 @@ import {
   getJellyseerrMediaDetailsEffect,
   requestMovieEffect,
   requestTvShowEffect,
+  type JellyseerrMediaDetails,
+  type JellyseerrSearchResult,
 } from '../utils/jellyseerr-client.js';
 import { resolveJellyseerrUrlEffect } from '../utils/url-resolver.js';
 import { getLanguage, setLanguage, t } from '../i18n/index.js';
@@ -427,6 +429,27 @@ const handleTestJellyseerr = (): Effect.Effect<unknown> =>
 /**
  * Search Jellyseerr and return enriched results with availability info.
  */
+/** What the search handler needs of a Jellyseerr title, from a search or from its details. */
+type SearchCandidate = Pick<
+  JellyseerrSearchResult,
+  'id' | 'mediaType' | 'title' | 'name' | 'releaseDate' | 'firstAirDate' | 'overview' | 'posterPath'
+> & { readonly mediaInfo?: { readonly status: number } };
+
+const detailsToCandidate = (
+  details: JellyseerrMediaDetails,
+  mediaType: 'movie' | 'tv',
+): SearchCandidate => ({
+  id: details.id,
+  mediaType,
+  title: details.title,
+  name: details.name,
+  releaseDate: details.releaseDate,
+  firstAirDate: details.firstAirDate,
+  overview: details.overview ?? '',
+  posterPath: details.posterPath,
+  mediaInfo: details.mediaInfo,
+});
+
 const handleSearchJellyseerr = (message: SearchJellyseerrMessage): Effect.Effect<unknown> =>
   Effect.gen(function* () {
     const config = yield* loadConfigEffect;
@@ -445,10 +468,20 @@ const handleSearchJellyseerr = (message: SearchJellyseerrMessage): Effect.Effect
     }
 
     return yield* Effect.gen(function* () {
-      const searchResults = yield* jellyseerrSearchEffect(config, message.payload.query);
+      const { mediaType, tmdbId } = message.payload;
+      // A page that names its TMDB id (TMDB itself) gets that title, not a search.
+      const candidates: readonly SearchCandidate[] =
+        tmdbId && mediaType
+          ? [
+              detailsToCandidate(
+                yield* getJellyseerrMediaDetailsEffect(config, mediaType, tmdbId),
+                mediaType,
+              ),
+            ]
+          : (yield* jellyseerrSearchEffect(config, message.payload.query)).results;
 
       // Filter by mediaType if specified
-      let filtered = searchResults.results;
+      let filtered = candidates;
       if (message.payload.mediaType) {
         filtered = filtered.filter((r) => r.mediaType === message.payload.mediaType);
       }

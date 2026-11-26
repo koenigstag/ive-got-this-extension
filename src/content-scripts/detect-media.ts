@@ -1,6 +1,7 @@
 import { Option } from 'effect';
 import type { DetectedMedia, SourceSite } from '../types/index.js';
 import { getIviTitleSlug } from './content-script-helpers.js';
+import { readTmdbTitle } from './sites/tmdb-page.js';
 
 /**
  * Identify the current site from the URL.
@@ -21,6 +22,7 @@ export const identifySite = (url: string): SourceSite => {
   if (hostname.includes('justwatch.com')) return 'justwatch';
   // ivi.ru sends visitors outside Russia to ivi.tv, which runs the same site.
   if (/(^|\.)ivi\.(ru|tv)$/.test(hostname)) return 'ivi';
+  if (/^(www\.)?themoviedb\.org$/.test(hostname)) return 'tmdb';
 
   return 'unknown';
 };
@@ -53,6 +55,8 @@ export const detectMedia = (): DetectedMedia | undefined => {
       return detectFromJustWatch();
     case 'ivi':
       return detectFromIvi();
+    case 'tmdb':
+      return detectFromTmdb();
     default:
       return undefined;
   }
@@ -746,4 +750,15 @@ const detectFromIvi = (): DetectedMedia | undefined => {
 
   // Episode pages are treated as the show: the card is about the series.
   return isSeries ? { type: 'series', title, year } : { type: 'movie', title, year };
+};
+
+/**
+ * Detect the title on a TMDB title page (`/movie/<id>`, `/tv/<id>`): the TMDB
+ * id comes from the URL, the name and year from the page header.
+ */
+const detectFromTmdb = (): DetectedMedia | undefined => {
+  const page = readTmdbTitle(document, window.location.href);
+  if (!page?.title) return undefined;
+  const common = { title: page.title, year: page.year, tmdbId: String(page.tmdbId) };
+  return page.mediaType === 'movie' ? { type: 'movie', ...common } : { type: 'series', ...common };
 };

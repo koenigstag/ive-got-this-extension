@@ -48,6 +48,8 @@ export const fixtureUrls: Record<string, string> = {
   'amazon-series.html': 'https://www.amazon.com/gp/video/detail/B07QJ2J5HP',
   'ivi-movie.html': 'https://www.ivi.ru/watch/109140',
   'ivi-series.html': 'https://www.ivi.ru/watch/himera',
+  'tmdb-tv.html': 'https://www.themoviedb.org/tv/220542-kusuriya-no-hitorigoto',
+  'tmdb-movie.html': 'https://www.themoviedb.org/movie/372058-kimi-no-na-wa',
 };
 
 /** Standard mock responses used across tests. */

@@ -4,6 +4,7 @@ import { initTrakt } from './sites/trakt.js';
 import { initImdb } from './sites/imdb.js';
 import { initJustWatchSPA } from './sites/justwatch.js';
 import { initIvi } from './sites/ivi.js';
+import { initTmdb } from './sites/tmdb.js';
 import { initSearchEngineSidebar, initYandexSearch } from './sites/search-engine.js';
 import { injectStatusIndicator } from './fallback.js';
 import type { CheckMediaResponse, GetConfigResponse } from '../types/messages.js';
@@ -51,6 +52,11 @@ const init = async (): Promise<void> => {
 
   if (site === 'ivi') {
     initIvi();
+    return;
+  }
+
+  if (site === 'tmdb') {
+    initTmdb();
     return;
   }
 
