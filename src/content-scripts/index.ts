@@ -6,6 +6,7 @@ import { initJustWatchSPA } from './sites/justwatch.js';
 import { initIvi } from './sites/ivi.js';
 import { initKinopoisk } from './sites/kinopoisk.js';
 import { initShikimori } from './sites/shikimori.js';
+import { initTmdb } from './sites/tmdb.js';
 import { initSearchEngineSidebar, initYandexSearch } from './sites/search-engine.js';
 import { injectStatusIndicator } from './fallback.js';
 import type { CheckMediaResponse, GetConfigResponse } from '../types/messages.js';
@@ -63,6 +64,11 @@ const init = async (): Promise<void> => {
 
   if (site === 'shikimori') {
     initShikimori();
+    return;
+  }
+
+  if (site === 'tmdb') {
+    initTmdb();
     return;
   }
 

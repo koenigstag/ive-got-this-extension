@@ -53,6 +53,8 @@ export const fixtureUrls: Record<string, string> = {
   'kinopoisk-russian.html': 'https://www.kinopoisk.ru/film/41519/',
   'shikimori-tv.html': 'https://shikimori.io/animes/54492-kusuriya-no-hitorigoto',
   'shikimori-movie.html': 'https://shikimori.io/animes/32281-kimi-no-na-wa',
+  'tmdb-tv.html': 'https://www.themoviedb.org/tv/220542-kusuriya-no-hitorigoto',
+  'tmdb-movie.html': 'https://www.themoviedb.org/movie/372058-kimi-no-na-wa',
 };
 
 /** Standard mock responses used across tests. */

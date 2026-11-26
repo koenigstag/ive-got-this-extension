@@ -418,6 +418,8 @@ export interface JellyseerrMediaDetails {
   readonly name?: string;
   readonly releaseDate?: string;
   readonly firstAirDate?: string;
+  readonly overview?: string;
+  readonly posterPath?: string;
   /** TV show seasons as TMDB lists them */
   readonly seasons?: readonly {
     readonly seasonNumber: number;

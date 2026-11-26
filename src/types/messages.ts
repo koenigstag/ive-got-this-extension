@@ -194,6 +194,11 @@ export interface SearchJellyseerrMessage {
     readonly query: string;
     readonly mediaType?: 'movie' | 'tv';
     readonly year?: number;
+    /**
+     * The title's TMDB id, when the page names it. With `mediaType` it makes
+     * the service worker take that title from Jellyseerr instead of searching.
+     */
+    readonly tmdbId?: number;
   };
 }
 

@@ -3,6 +3,7 @@ import type { DetectedMedia, SourceSite } from '../types/index.js';
 import { getIviTitleSlug } from './content-script-helpers.js';
 import { kinopoiskQueries, readKinopoiskTitle } from './sites/kinopoisk-page.js';
 import { buildShikimoriSearch, readShikimoriAnime } from './sites/shikimori-page.js';
+import { readTmdbTitle } from './sites/tmdb-page.js';
 
 /**
  * Identify the current site from the URL.
@@ -26,6 +27,7 @@ export const identifySite = (url: string): SourceSite => {
   if (/^(www\.)?kinopoisk\.ru$/.test(hostname)) return 'kinopoisk';
   // shikimori.one and shiki.one send visitors to shikimori.io; shikimori.me was an earlier domain.
   if (/^(www\.)?(shikimori\.(io|one|me)|shiki\.one)$/.test(hostname)) return 'shikimori';
+  if (/^(www\.)?themoviedb\.org$/.test(hostname)) return 'tmdb';
 
   return 'unknown';
 };
@@ -62,6 +64,8 @@ export const detectMedia = (): DetectedMedia | undefined => {
       return detectFromKinopoisk();
     case 'shikimori':
       return detectFromShikimori();
+    case 'tmdb':
+      return detectFromTmdb();
     default:
       return undefined;
   }
@@ -786,4 +790,15 @@ const detectFromShikimori = (): DetectedMedia | undefined => {
   return anime.kind === 'movie'
     ? { type: 'movie', title, year: search.year }
     : { type: 'series', title, year: search.year };
+};
+
+/**
+ * Detect the title on a TMDB title page (`/movie/<id>`, `/tv/<id>`): the TMDB
+ * id comes from the URL, the name and year from the page header.
+ */
+const detectFromTmdb = (): DetectedMedia | undefined => {
+  const page = readTmdbTitle(document, window.location.href);
+  if (!page?.title) return undefined;
+  const common = { title: page.title, year: page.year, tmdbId: String(page.tmdbId) };
+  return page.mediaType === 'movie' ? { type: 'movie', ...common } : { type: 'series', ...common };
 };
