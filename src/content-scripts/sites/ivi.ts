@@ -5,6 +5,7 @@ import {
   buildResultRow,
   injectSkeletonKeyframes,
 } from '../common-ui.js';
+import { t } from '../../i18n/index.js';
 import { tryDetectMedia } from '../index.js';
 import { getIviTitleSlug } from '../content-script-helpers.js';
 import type { DetectedMedia } from '../../types/index.js';
@@ -178,7 +179,7 @@ const headerHtml = (serverLabel: string): string => {
       <div style="width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">${iconHtml}</div>
       <div>
         <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">Powered by Jellyseerr &middot; ${serverLabel}</div>
+        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('poweredBy', serverLabel)}</div>
       </div>
     </div>
   `;
@@ -236,18 +237,12 @@ export const injectIviCard = (response: SearchJellyseerrResponse, queryTitle: st
 
   if (!jellyseerrEnabled) {
     card.appendChild(
-      createInfoRow(
-        '⚙️',
-        'Jellyseerr not configured',
-        'Open the extension popup to set your Jellyseerr URL and API key.',
-      ),
+      createInfoRow('⚙️', t('jellyseerrNotConfigured'), t('jellyseerrNotConfiguredPopup')),
     );
   } else if (error) {
-    card.appendChild(createInfoRow('⚠️', 'Connection error', error));
+    card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
   } else if (results.length === 0) {
-    card.appendChild(
-      createInfoRow('🔍', 'No results', `"${queryTitle}" was not found on Jellyseerr.`),
-    );
+    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
   } else {
     results.forEach((item, idx) => {
       const row = buildResultRow(item, serverLabel, jellyseerrUrl);
