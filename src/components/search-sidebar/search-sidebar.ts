@@ -340,7 +340,7 @@ export class SearchSidebar extends LitElement {
         <div class="info">
           <div class="title" title="${item.title}${yearStr}">${item.title}${yearStr}</div>
           <div class="type-label">${typeLabel}</div>
-          ${unsafeHTML(buildStatusBadge(item.status))}
+          ${unsafeHTML(buildStatusBadge(item.status, item.mediaType))}
           <div class="actions">${this._renderAction(item, serverLabel)}</div>
         </div>
       </div>

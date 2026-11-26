@@ -37,7 +37,13 @@
     "message": "Ждёт одобрения"
   },
   "statusProcessing": {
-    "message": "Скачивается"
+    "message": "Передано на загрузку"
+  },
+  "statusProcessingTv": {
+    "message": "Передано в Sonarr"
+  },
+  "statusProcessingMovie": {
+    "message": "Передано в Radarr"
   },
   "statusUnknown": {
     "message": "Неизвестно"

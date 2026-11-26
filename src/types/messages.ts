@@ -170,6 +170,8 @@ export interface MediaDetailsResponse {
     readonly jellyseerr: MediaDetailsJellyseerr;
     /** Seasons of a series (specials left out); empty for a movie. */
     readonly seasons: readonly MediaDetailsSeason[];
+    /** Prowlarr's address, for the dialog's "Find a release"; absent when not set up. */
+    readonly prowlarrUrl?: string;
   };
 }
 

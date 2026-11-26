@@ -1,7 +1,5 @@
 import {
   COMBINED_SVG,
-  EMBY_SVG,
-  JELLYFIN_SVG,
   sendMessage,
   createInfoRow,
   createNotFoundRows,
@@ -9,6 +7,7 @@ import {
   injectSkeletonKeyframes,
   serverButtonLogo,
 } from '../common-ui.js';
+import { jellyseerrSvg } from '../../assets/jellyseerr-logo.js';
 import { tryDetectMedia } from '../index.js';
 import { dialogTargetFromResult, openMediaDialog } from '../media-dialog.js';
 import { getJustWatchPageType } from '../content-script-helpers.js';
@@ -396,7 +395,6 @@ const processJustWatchSearchRow = async (
   if (!titleLink) return;
 
   const isJellyfin = serverType === 'jellyfin';
-  const serverIcon = isJellyfin ? JELLYFIN_SVG : EMBY_SVG;
   const serverBg = isJellyfin ? '#00A4DC' : '#52B54B';
   const serverBgHover = isJellyfin ? '#0088B8' : '#43A047';
 
@@ -457,8 +455,6 @@ const processJustWatchSearchRow = async (
     maxWidth: '100%',
   };
 
-  const iconHtml = `<span style="display:inline-flex;width:18px;height:18px;flex-shrink:0;">${serverIcon.replace(/width="48" height="48"/, 'width="18" height="18"')}</span>`;
-
   if (item.status === 'available' || item.status === 'partial') {
     Object.assign(btn.style, {
       ...baseBtnStyles,
@@ -485,7 +481,7 @@ const processJustWatchSearchRow = async (
       background: '#616161',
       color: '#ccc',
     });
-    btn.innerHTML = `${iconHtml}<span>⏳ ${t('requestPending')}</span>`;
+    btn.innerHTML = `${jellyseerrSvg(18)}<span>⏳ ${t('requestPending')}</span>`;
   } else {
     Object.assign(btn.style, {
       ...baseBtnStyles,
@@ -493,7 +489,8 @@ const processJustWatchSearchRow = async (
       color: '#d0bcff',
       border: '1px solid rgba(123, 47, 190, 0.5)',
     });
-    btn.innerHTML = `${iconHtml}<span>＋ ${t('requestMore')}</span>`;
+    // Jellyseerr's logo, not the server's: the request goes to Jellyseerr.
+    btn.innerHTML = `${jellyseerrSvg(18)}<span>${t('requestMore')}</span>`;
     btn.addEventListener('mouseenter', () => {
       btn.style.background = 'rgba(123, 47, 190, 0.35)';
       btn.style.transform = 'translateY(-1px)';

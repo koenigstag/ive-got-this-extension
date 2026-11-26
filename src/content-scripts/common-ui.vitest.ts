@@ -219,7 +219,8 @@ describe('common-ui', () => {
     it('opens the media dialog from Request instead of requesting at once', () => {
       const row = buildResultRow({ ...mockItem, mediaType: 'tv', status: 'not_requested' }, 'Emby');
       const reqBtn = row.querySelector('button');
-      expect(reqBtn?.textContent).to.equal('＋ Request…');
+      expect(reqBtn?.textContent).to.equal('Request…');
+      expect(reqBtn?.querySelector('svg')).not.toBeNull(); // Jellyseerr's logo
 
       reqBtn?.click();
       // A series goes to the dialog, where the seasons to request are chosen.

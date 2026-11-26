@@ -11,6 +11,10 @@ vi.mock('./common-ui.js', () => ({
   sendMessage: vi.fn(),
   openInNewTab: vi.fn(),
   openExtensionSettings: vi.fn(),
+  buildProwlarrSearchUrl: (url: string, query: string, mediaType?: 'movie' | 'tv') =>
+    `${url}/search?query=${encodeURIComponent(query)}&categories=${mediaType === 'movie' ? '2000' : '5000'}`,
+  processingStatusKey: (mediaType?: string) =>
+    mediaType === 'movie' ? 'statusProcessingMovie' : 'statusProcessingTv',
 }));
 
 import { sendMessage, openInNewTab, openExtensionSettings } from './common-ui.js';
@@ -114,6 +118,34 @@ describe('media dialog', () => {
     expect(openInNewTab).toHaveBeenCalledWith('http://jf.test/web/#/details?id=series-1');
     button('Open in Jellyseerr').click();
     expect(openInNewTab).toHaveBeenCalledWith('http://seerr.test/tv/5920');
+  });
+
+  it('offers a Prowlarr search and says where a request went', async () => {
+    answer({
+      ...seriesDetails,
+      payload: {
+        ...seriesDetails.payload,
+        prowlarrUrl: 'http://prowlarr.lab.home',
+        jellyseerr: { ...seriesDetails.payload.jellyseerr, status: 'processing' },
+      },
+    });
+    openMediaDialog(series);
+
+    await vi.waitFor(() => expect(text()).toContain('Sent to Sonarr'));
+    // Jellyseerr's logo on the request: the request goes there.
+    expect(button('Request seasons').querySelector('svg [id^="mc-jsr-"]')).not.toBeNull();
+    button('Find a release').click();
+    expect(openInNewTab).toHaveBeenCalledWith(
+      'http://prowlarr.lab.home/search?query=The%20Mentalist&categories=5000',
+    );
+  });
+
+  it('has no Prowlarr button without a Prowlarr address', async () => {
+    answer(seriesDetails);
+    openMediaDialog(series);
+
+    await vi.waitFor(() => expect(text()).toContain('Open in Jellyseerr'));
+    expect(shadow().querySelector('button.release')).toBeNull();
   });
 
   it('requests the selected seasons and shows the new state', async () => {
