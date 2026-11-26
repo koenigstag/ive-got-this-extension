@@ -1,8 +1,9 @@
 import { Option, Effect } from 'effect';
 import { detectMediaOption } from './detect-media.js';
 import { buildCheckPayloadEffect } from './content-script-helpers.js';
-import type { RequestMediaResponse, JellyseerrResultItem } from '../types/messages.js';
+import type { JellyseerrResultItem } from '../types/messages.js';
 import { t } from '../i18n/index.js';
+import { dialogTargetFromResult, openMediaDialog } from './media-dialog.js';
 
 /**
  * Detect media from the current page, returning `undefined` when nothing is found.
@@ -109,67 +110,6 @@ export const COMBINED_SVG = `<svg width="48" height="48" viewBox="0 0 512 512" f
 </svg>`;
 
 /**
- * Handle click on the request button - sends request via Jellyseerr.
- */
-export const handleRequestClick = async (): Promise<void> => {
-  const media = tryDetectMedia();
-  if (!media) return;
-
-  const title =
-    media.type === 'season' || media.type === 'episode' ? media.seriesTitle : media.title;
-  const mediaType = media.type === 'movie' ? ('movie' as const) : ('series' as const);
-
-  const response = await sendMessage<RequestMediaResponse>({
-    type: 'REQUEST_MEDIA',
-    payload: {
-      title,
-      year: media.year,
-      tmdbId: media.tmdbId,
-      imdbId: media.imdbId,
-      mediaType,
-    },
-  });
-
-  if (response?.payload.success) {
-    alert(t('alertRequested', title));
-  } else {
-    alert(t('alertRequestFailed', title, response?.payload.message || t('unknownError')));
-  }
-};
-
-/**
- * Request an item via Jellyseerr from the sidebar.
- */
-export const requestFromSidebar = async (item: JellyseerrResultItem): Promise<boolean> => {
-  const mediaType = item.mediaType === 'movie' ? ('movie' as const) : ('series' as const);
-
-  console.log(
-    "[I've got this!] Requesting media:",
-    `\n  Title: ${item.title}\n  TMDb ID: ${item.id}\n  Type: ${mediaType}\n  (server details will appear in the service worker console)`,
-  );
-
-  const response = await sendMessage<{
-    type: string;
-    payload: { success: boolean; message: string };
-  }>({
-    type: 'REQUEST_MEDIA',
-    payload: {
-      title: item.title,
-      year: item.year,
-      tmdbId: String(item.id),
-      mediaType,
-    },
-  });
-
-  console.log(
-    "[I've got this!] Request response:",
-    `\n  Success: ${response?.payload.success ?? false}\n  Message: ${response?.payload.message ?? '(no response)'}`,
-  );
-
-  return response?.payload.success ?? false;
-};
-
-/**
  * Create a styled action button.
  */
 export const createActionButton = (
@@ -231,13 +171,31 @@ export const buildStatusBadge = (status: JellyseerrResultItem['status']): string
 };
 
 /**
- * Build a single result row with poster, title, status badge, and request button.
+ * The one button of a Jellyseerr result, by the title's state: the server name on a title
+ * that is there, "Already requested", or "Request…". Each opens the media dialog.
  */
-export const buildResultRow = (
-  item: JellyseerrResultItem,
+export const resultAction = (
+  status: JellyseerrResultItem['status'],
   serverLabel: string,
-  jellyseerrUrl?: string,
-): HTMLDivElement => {
+): { readonly text: string; readonly background: string; readonly hover: string } => {
+  if (status === 'available' || status === 'partial') {
+    const isJellyfin = serverLabel === 'Jellyfin';
+    return {
+      text: `▶ ${status === 'partial' ? t('serverPartial', serverLabel) : serverLabel}`,
+      background: isJellyfin ? '#00A4DC' : '#4CAF50',
+      hover: isJellyfin ? '#0088B8' : '#388E3C',
+    };
+  }
+  if (status === 'pending' || status === 'processing') {
+    return { text: `⏳ ${t('requestPending')}`, background: '#616161', hover: '#424242' };
+  }
+  return { text: `＋ ${t('requestMore')}`, background: '#7B2FBE', hover: '#5E1F9B' };
+};
+
+/**
+ * Build a single result row with poster, title, status badge, and its one button.
+ */
+export const buildResultRow = (item: JellyseerrResultItem, serverLabel: string): HTMLDivElement => {
   const row = document.createElement('div');
   Object.assign(row.style, {
     display: 'flex',
@@ -294,74 +252,12 @@ export const buildResultRow = (
     gap: '6px',
   });
 
-  /* Server-type-based button colors: Emby = green, Jellyfin = blue/purple */
-  const isJellyfin = serverLabel === 'Jellyfin';
-  const serverBtnBg = isJellyfin ? '#00A4DC' : '#4CAF50';
-  const serverBtnHover = isJellyfin ? '#0088B8' : '#388E3C';
-
-  if (item.status === 'available' || item.status === 'partial') {
-    /* "Play on [server]" → opens the media server web UI (deep link). */
-    if (item.serverItemUrl) {
-      const serverBtn = createActionButton(
-        `▶ ${t('playOnServer', serverLabel)}`,
-        serverBtnBg,
-        serverBtnHover,
-      );
-      serverBtn.addEventListener('click', () => {
-        window.open(item.serverItemUrl, '_blank');
-      });
-      btnContainer.appendChild(serverBtn);
-    }
-    /* "Manage in Jellyseerr" → opens via service worker to bypass SameSite cookies */
-    if (jellyseerrUrl) {
-      const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
-      const manageBtn = createActionButton(t('manageInJellyseerr'), '#7B2FBE', '#5E1F9B');
-      manageBtn.addEventListener('click', () => {
-        const url = `${jellyseerrUrl}/${slug}/${item.id}`;
-        console.log(`[I've got this!] Opening via service worker: ${url}`);
-        sendMessage({ type: 'OPEN_TAB', payload: { url } });
-      });
-      btnContainer.appendChild(manageBtn);
-    }
-  } else if (item.status === 'pending' || item.status === 'processing') {
-    const pendingBtn = createActionButton(`⏳ ${t('requestPending')}`, '#616161', '#424242');
-    if (jellyseerrUrl) {
-      const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
-      pendingBtn.style.cursor = 'pointer';
-      pendingBtn.addEventListener('click', () => {
-        const url = `${jellyseerrUrl}/${slug}/${item.id}`;
-        console.log(`[I've got this!] Opening via service worker: ${url}`);
-        sendMessage({ type: 'OPEN_TAB', payload: { url } });
-      });
-    } else {
-      pendingBtn.style.cursor = 'default';
-    }
-    btnContainer.appendChild(pendingBtn);
-  } else {
-    /* not_requested / unknown */
-    const reqBtn = createActionButton(`＋ ${t('request')}`, '#7B2FBE', '#5E1F9B');
-    reqBtn.addEventListener('click', () => {
-      reqBtn.textContent = t('requesting');
-      reqBtn.style.opacity = '0.7';
-      reqBtn.style.pointerEvents = 'none';
-      requestFromSidebar(item).then((ok) => {
-        if (ok) {
-          reqBtn.textContent = `✓ ${t('requested')}`;
-          reqBtn.style.background = '#4CAF50';
-        } else {
-          reqBtn.textContent = `✗ ${t('requestFailed')}`;
-          reqBtn.style.background = '#c62828';
-          setTimeout(() => {
-            reqBtn.textContent = `＋ ${t('request')}`;
-            reqBtn.style.background = '#7B2FBE';
-            reqBtn.style.opacity = '1';
-            reqBtn.style.pointerEvents = 'auto';
-          }, 3000);
-        }
-      });
-    });
-    btnContainer.appendChild(reqBtn);
-  }
+  /* One button, as on Trakt: it opens the media dialog, which has the server link,
+     the Jellyseerr state, the request and the seasons. */
+  const action = resultAction(item.status, serverLabel);
+  const btn = createActionButton(action.text, action.background, action.hover);
+  btn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
+  btnContainer.appendChild(btn);
 
   info.appendChild(btnContainer);
   row.appendChild(info);

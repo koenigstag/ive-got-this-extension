@@ -78,13 +78,13 @@ test.describe('IMDb — content script injection', () => {
     await expect(card).toContainText('No results');
   });
 
-  test('shows Play on Emby button for available movie', async ({ page }) => {
+  test('shows one Emby button for an available movie', async ({ page }) => {
     await setupContentScript(page, 'imdb-movie.html', {
       GET_CONFIG: mockResponses.configEmby,
       SEARCH_JELLYSEERR: mockResponses.searchJellyseerrMovie('The Matrix'),
     });
 
     const card = page.locator('#media-connector-imdb-card');
-    await expect(card).toContainText('Play on Emby');
+    await expect(card.getByRole('button')).toHaveText('▶ Emby');
   });
 });

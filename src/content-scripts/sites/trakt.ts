@@ -1,4 +1,4 @@
-import { EMBY_SVG, JELLYFIN_SVG, sendMessage, handleRequestClick } from '../common-ui.js';
+import { EMBY_SVG, JELLYFIN_SVG, sendMessage } from '../common-ui.js';
 import { tryDetectMedia, buildPayload } from '../index.js';
 import { t } from '../../i18n/index.js';
 import { dialogTargetFromMedia, openMediaDialog } from '../media-dialog.js';
@@ -13,6 +13,11 @@ const openDialogForPage = (): boolean => {
   if (!media) return false;
   openMediaDialog(dialogTargetFromMedia(media));
   return true;
+};
+
+/** Open the dialog; when the page no longer shows a title, fall back to the server link. */
+const openDialogOrServer = (itemUrl?: string): void => {
+  if (!openDialogForPage() && itemUrl) window.open(itemUrl, '_blank');
 };
 
 /**
@@ -181,12 +186,7 @@ export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
     </div>`;
   item.querySelector('p')!.textContent = labelText;
 
-  const open = (): void => {
-    // The page no longer shows a title: fall back to the server link.
-    if (!openDialogForPage() && response.payload.itemUrl) {
-      window.open(response.payload.itemUrl, '_blank');
-    }
-  };
+  const open = (): void => openDialogOrServer(response.payload.itemUrl);
   item.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -217,7 +217,7 @@ export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
 };
 
 /**
- * Inject a "Play on Emby/Jellyfin" button into Trakt's legacy action-buttons area.
+ * Inject the Emby/Jellyfin button into Trakt's legacy action-buttons area.
  */
 export const tryInjectTraktLegacyButton = (response: CheckMediaResponse): void => {
   const TRAKT_ACTION_BTN_ID = 'media-connector-trakt-action-btn';
@@ -268,31 +268,20 @@ export const tryInjectTraktLegacyButton = (response: CheckMediaResponse): void =
     .replace(/width="48"/, 'width="20"')
     .replace(/height="48"/, 'height="20"');
 
-  if (canLink) {
-    btn.href = response.payload.itemUrl!;
-    btn.target = '_blank';
-    btn.rel = 'noopener';
-    btn.innerHTML = `
-      <div class="fa fa-fw" style="display:inline-flex;align-items:center;justify-content:center;width:1.28571429em;">${iconHtml}</div>
-      <div class="text">
-        <div class="main-info">${t('playOnServer', serverLabel)}</div>
-        ${response.payload.status === 'partial' ? `<div class="under-info">${t('statusPartial')}</div>` : ''}
-      </div>`;
-  } else if (canRequest) {
+  if (canLink || canRequest) {
+    // One button, as in Where to Watch: it opens the media dialog, which has the server
+    // link, the request and the seasons.
     btn.href = '#';
     btn.innerHTML = `
       <div class="fa fa-fw" style="display:inline-flex;align-items:center;justify-content:center;width:1.28571429em;">${iconHtml}</div>
       <div class="text">
-        <div class="main-info">${t('requestOnServer', serverLabel)}</div>
+        <div class="main-info">${canLink ? serverLabel : t('requestMore')}</div>
+        ${response.payload.status === 'partial' ? `<div class="under-info">${t('statusPartial')}</div>` : ''}
       </div>`;
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const textEl = btn.querySelector('.main-info');
-      if (textEl) textEl.textContent = t('requesting');
-      handleRequestClick().then(() => {
-        if (textEl) textEl.textContent = t('requested');
-      });
+      openDialogOrServer(response.payload.itemUrl);
     });
   } else if (isUnconfigured) {
     btn.href = '#';
@@ -338,7 +327,7 @@ export const tryInjectTraktRow = (response: CheckMediaResponse): void => {
 
   if (status === 'available' || status === 'partial') {
     const label = status === 'partial' ? t('serverPartial', serverLabel) : serverLabel;
-    const link = `<a href="${response.payload.itemUrl}" target="_blank" style="color: #ed1c24;">${label}</a>`;
+    const link = `<a href="#" class="media-connector-request" style="color: #ed1c24;">${label}</a>`;
     content += `<div style="font-weight: 600;">${t('availableOnServer', link)}</div>`;
   } else if (status === 'unavailable') {
     const link = `<a href="#" class="media-connector-request" style="color: #ed1c24;">Jellyseerr</a>`;
@@ -353,7 +342,7 @@ export const tryInjectTraktRow = (response: CheckMediaResponse): void => {
   if (requestLink) {
     requestLink.addEventListener('click', (e) => {
       e.preventDefault();
-      handleRequestClick();
+      openDialogOrServer(response.payload.itemUrl);
     });
   }
 

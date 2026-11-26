@@ -5,9 +5,9 @@ import {
   COMBINED_SVG,
   buildStatusBadge,
   openExtensionSettings,
-  openInNewTab,
-  requestFromSidebar,
+  resultAction,
 } from '../../content-scripts/common-ui.js';
+import { dialogTargetFromResult, openMediaDialog } from '../../content-scripts/media-dialog.js';
 import type { SearchJellyseerrResponse, JellyseerrResultItem } from '../../types/messages.js';
 import { t } from '../../i18n/index.js';
 
@@ -244,7 +244,6 @@ export class SearchSidebar extends LitElement {
   private _renderResultRow(item: JellyseerrResultItem, serverLabel: string) {
     const typeLabel = item.mediaType === 'movie' ? t('typeMovie') : t('typeTvShow');
     const yearStr = item.year ? ` (${item.year})` : '';
-    const jellyseerrUrl = this.response?.payload.jellyseerrUrl;
 
     return html`
       <div class="result-row">
@@ -257,89 +256,35 @@ export class SearchSidebar extends LitElement {
           <div class="title" title="${item.title}${yearStr}">${item.title}${yearStr}</div>
           <div class="type-label">${typeLabel}</div>
           ${unsafeHTML(buildStatusBadge(item.status))}
-          <div class="actions">${this._renderActions(item, serverLabel, jellyseerrUrl)}</div>
+          <div class="actions">${this._renderAction(item, serverLabel)}</div>
         </div>
       </div>
     `;
   }
 
-  private _renderActions(item: JellyseerrResultItem, serverLabel: string, jellyseerrUrl?: string) {
-    const isJellyfin = serverLabel === 'Jellyfin';
-    const serverBtnBg = isJellyfin ? '#00A4DC' : '#4CAF50';
-
-    if (item.status === 'available' || item.status === 'partial') {
-      return html`
-        ${item.serverItemUrl
-          ? html`<button
-              @click="${() => window.open(item.serverItemUrl, '_blank')}"
-              style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: ${serverBtnBg}; color: #fff; fontSize: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
-            >
-              ▶ ${t('playOnServer', serverLabel)}
-            </button>`
-          : nothing}
-        ${jellyseerrUrl
-          ? html`<button
-              @click="${() => this._openJellyseerr(jellyseerrUrl, item)}"
-              style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: #7B2FBE; color: #fff; fontSize: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
-            >
-              ${t('manageInJellyseerr')}
-            </button>`
-          : nothing}
-      `;
-    }
-
-    if (item.status === 'pending' || item.status === 'processing') {
-      return html`
-        <button
-          @click="${() => jellyseerrUrl && this._openJellyseerr(jellyseerrUrl, item)}"
-          style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: #616161; color: #fff; fontSize: 12px; font-weight: 600; cursor: ${jellyseerrUrl
-            ? 'pointer'
-            : 'default'}; transition: background 0.15s; line-height: 1.4;"
-        >
-          ⏳ ${t('requestPending')}
-        </button>
-      `;
-    }
-
+  /** The row's one button, as on Trakt: by the title's state, and it opens the dialog. */
+  private _renderAction(item: JellyseerrResultItem, serverLabel: string) {
+    const action = resultAction(item.status, serverLabel);
     return html`
       <button
-        @click="${(e: Event) => this._handleRequest(e, item, serverLabel)}"
-        style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: #7B2FBE; color: #fff; fontSize: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
+        @click="${() => this._openDialog(item)}"
+        @mouseenter="${(e: Event) =>
+          ((e.currentTarget as HTMLButtonElement).style.background = action.hover)}"
+        @mouseleave="${(e: Event) =>
+          ((e.currentTarget as HTMLButtonElement).style.background = action.background)}"
+        style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: ${action.background}; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
       >
-        ＋ ${t('request')}
+        ${action.text}
       </button>
     `;
   }
 
-  private _openJellyseerr(baseUrl: string, item: JellyseerrResultItem) {
-    const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
-    // Through the service worker, like the cards on other sites. This used to be a
-    // `media-connector-open-tab` window event that nothing in the content script listened
-    // to, so the button did nothing in the extension.
-    void openInNewTab(`${baseUrl}/${slug}/${item.id}`);
-  }
-
-  private async _handleRequest(e: Event, item: JellyseerrResultItem, _serverLabel: string) {
-    const btn = e.target as HTMLButtonElement;
-    const originalText = btn.textContent;
-    btn.textContent = t('requesting');
-    btn.style.opacity = '0.7';
-    btn.style.pointerEvents = 'none';
-
-    const ok = await requestFromSidebar(item);
-    if (ok) {
-      btn.textContent = `✓ ${t('requested')}`;
-      btn.style.background = '#4CAF50';
-    } else {
-      btn.textContent = `✗ ${t('requestFailed')}`;
-      btn.style.background = '#c62828';
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = '#7B2FBE';
-        btn.style.opacity = '1';
-        btn.style.pointerEvents = 'auto';
-      }, 3000);
-    }
+  /**
+   * The media dialog: the title on the server (with the link to play it), its state and
+   * requests in Jellyseerr, and for a series the seasons to request.
+   */
+  private _openDialog(item: JellyseerrResultItem) {
+    openMediaDialog(dialogTargetFromResult(item));
   }
 }
 

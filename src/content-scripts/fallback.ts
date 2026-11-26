@@ -1,11 +1,14 @@
-import { handleRequestClick } from './common-ui.js';
+import { dialogTargetFromMedia, openMediaDialog } from './media-dialog.js';
 import type { CheckMediaResponse } from '../types/messages.js';
+import type { DetectedMedia } from '../types/index.js';
 import { t } from '../i18n/index.js';
 
 /**
- * Inject the media status indicator into the page.
+ * Inject the media status indicator into the page. A click opens the media dialog for the
+ * title, whatever its state: the dialog has the server link, the request and the seasons.
+ * @param media - The title on the page
  */
-export const injectStatusIndicator = (response: CheckMediaResponse, _mediaType: string): void => {
+export const injectStatusIndicator = (response: CheckMediaResponse, media: DetectedMedia): void => {
   // Remove existing indicator if present
   const existing = document.getElementById('media-connector-indicator');
   if (existing) existing.remove();
@@ -43,9 +46,7 @@ export const injectStatusIndicator = (response: CheckMediaResponse, _mediaType: 
       </svg>
       <span>${t('badgeAvailableOnTheServer')}</span>
     `;
-    indicator.addEventListener('click', () => {
-      window.open(response.payload.itemUrl, '_blank');
-    });
+    indicator.addEventListener('click', () => openMediaDialog(dialogTargetFromMedia(media)));
   } else if (response.payload.status === 'partial' && response.payload.itemUrl) {
     indicator.style.background = 'linear-gradient(135deg, #FF9800, #E65100)';
     indicator.innerHTML = `
@@ -54,9 +55,7 @@ export const injectStatusIndicator = (response: CheckMediaResponse, _mediaType: 
       </svg>
       <span>${response.payload.details ?? t('badgePartiallyAvailable')}</span>
     `;
-    indicator.addEventListener('click', () => {
-      window.open(response.payload.itemUrl, '_blank');
-    });
+    indicator.addEventListener('click', () => openMediaDialog(dialogTargetFromMedia(media)));
   } else if (response.payload.status === 'unavailable') {
     indicator.style.background = 'linear-gradient(135deg, #7B2FBE, #4A0E78)';
     indicator.innerHTML = `
@@ -65,9 +64,7 @@ export const injectStatusIndicator = (response: CheckMediaResponse, _mediaType: 
       </svg>
       <span>${t('requestWith', 'Jellyseerr')}</span>
     `;
-    indicator.addEventListener('click', () => {
-      handleRequestClick();
-    });
+    indicator.addEventListener('click', () => openMediaDialog(dialogTargetFromMedia(media)));
   } else if (response.payload.status === 'unconfigured') {
     indicator.style.background = 'linear-gradient(135deg, #616161, #424242)';
     indicator.innerHTML = `

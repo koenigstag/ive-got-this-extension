@@ -10,12 +10,16 @@ import {
   tryDetectMedia,
   buildPayload,
   sendMessage,
-  handleRequestClick,
   openExtensionSettings,
   openInNewTab,
-  requestFromSidebar,
 } from './common-ui.js';
-import type { JellyseerrResultItem } from '../types/messages.js';
+import { openMediaDialog } from './media-dialog.js';
+
+// The dialog itself is tested in media-dialog.vitest.ts; here only who opens it, for what.
+vi.mock('./media-dialog.js', async () => {
+  const actual = await vi.importActual('./media-dialog.js');
+  return { ...actual, openMediaDialog: vi.fn() };
+});
 
 describe('common-ui', () => {
   beforeEach(() => {
@@ -115,51 +119,6 @@ describe('common-ui', () => {
     });
   });
 
-  describe('handleRequestClick', () => {
-    it('detects media and sends request message', async () => {
-      const mockMedia = { type: 'movie' as const, title: 'The Matrix', year: 1999 };
-      vi.spyOn(detectMediaModule, 'detectMediaOption').mockReturnValue(Option.some(mockMedia));
-      window.alert = vi.fn();
-
-      await handleRequestClick();
-
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'REQUEST_MEDIA' }),
-        expect.any(Function),
-      );
-      expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Successfully requested'));
-    });
-
-    it('alerts on failure', async () => {
-      const mockMedia = { type: 'movie' as const, title: 'The Matrix', year: 1999 };
-      vi.spyOn(detectMediaModule, 'detectMediaOption').mockReturnValue(Option.some(mockMedia));
-      window.alert = vi.fn();
-      vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-        (_msg: unknown, cb: (response: unknown) => void) =>
-          cb({ payload: { success: false, message: 'fail' } }),
-      );
-
-      await handleRequestClick();
-
-      expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Failed to request'));
-    });
-  });
-
-  describe('requestFromSidebar', () => {
-    it('sends request and returns success status', async () => {
-      const result = await requestFromSidebar({
-        id: 123,
-        title: 'Test',
-        mediaType: 'movie',
-      } as unknown as JellyseerrResultItem);
-      expect(result).to.be.true;
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'REQUEST_MEDIA' }),
-        expect.any(Function),
-      );
-    });
-  });
-
   describe('buildStatusBadge', () => {
     it('returns a green badge for available status', () => {
       const html = buildStatusBadge('available');
@@ -222,76 +181,57 @@ describe('common-ui', () => {
       serverItemUrl: 'https://emby.test/item/123',
     };
 
-    it('renders an available item with a Play button', () => {
-      const row = buildResultRow(mockItem, 'Emby', 'https://jsr.test');
+    it('gives an available item one button, with the server name, that opens the dialog', () => {
+      const row = buildResultRow(mockItem, 'Emby');
       expect(row.textContent).to.contain('The Matrix (1999)');
-      expect(row.textContent).to.contain('▶ Play on Emby');
 
-      const playBtn = Array.from(row.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('Play'),
-      );
+      const buttons = row.querySelectorAll('button');
+      expect(buttons).toHaveLength(1);
+      expect(buttons[0].textContent).to.equal('▶ Emby');
+
       vi.spyOn(window, 'open').mockImplementation(() => null);
-      playBtn?.click();
-      expect(window.open).toHaveBeenCalledWith(mockItem.serverItemUrl, '_blank');
+      buttons[0].click();
+      expect(openMediaDialog).toHaveBeenCalledWith({
+        title: 'The Matrix',
+        year: 1999,
+        tmdbId: '123',
+        mediaType: 'movie',
+      });
+      expect(window.open).not.toHaveBeenCalled();
+      expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('renders a Manage in Jellyseerr button', () => {
-      const row = buildResultRow(mockItem, 'Emby', 'https://jsr.test');
-      const manageBtn = Array.from(row.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('Manage'),
-      );
-      expect(manageBtn).to.exist;
-
-      manageBtn?.click();
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'OPEN_TAB',
-          payload: { url: 'https://jsr.test/movie/123' },
-        }),
-        expect.any(Function),
-      );
+    it('labels a partly available item with the server', () => {
+      const row = buildResultRow({ ...mockItem, status: 'partial' }, 'Jellyfin');
+      expect(row.querySelector('button')?.textContent).to.equal('▶ Jellyfin (Partial)');
     });
 
-    it('renders a pending item and handles click', () => {
-      const row = buildResultRow({ ...mockItem, status: 'pending' }, 'Emby', 'https://jsr.test');
+    it('opens the media dialog from a pending item', () => {
+      const row = buildResultRow({ ...mockItem, status: 'pending' }, 'Emby');
       expect(row.textContent).to.contain('⏳ Request Pending');
 
-      const pendingBtn = row.querySelector('button');
-      pendingBtn?.click();
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'OPEN_TAB',
-          payload: { url: 'https://jsr.test/movie/123' },
-        }),
-        expect.any(Function),
-      );
+      row.querySelector('button')?.click();
+      expect(openMediaDialog).toHaveBeenCalledWith(expect.objectContaining({ tmdbId: '123' }));
     });
 
-    it('handles request button failure and reset', async () => {
-      vi.useFakeTimers();
-      vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-        (_msg: unknown, cb: (response: unknown) => void) => cb({ payload: { success: false } }),
-      );
-
-      const row = buildResultRow(
-        { ...mockItem, status: 'not_requested' },
-        'Emby',
-        'https://jsr.test',
-      );
+    it('opens the media dialog from Request instead of requesting at once', () => {
+      const row = buildResultRow({ ...mockItem, mediaType: 'tv', status: 'not_requested' }, 'Emby');
       const reqBtn = row.querySelector('button');
-      reqBtn?.click();
+      expect(reqBtn?.textContent).to.equal('＋ Request…');
 
-      await vi.runAllTimersAsync();
-      expect(reqBtn?.textContent).to.contain('＋ Request');
-      vi.useRealTimers();
+      reqBtn?.click();
+      // A series goes to the dialog, where the seasons to request are chosen.
+      expect(openMediaDialog).toHaveBeenCalledWith({
+        title: 'The Matrix',
+        year: 1999,
+        tmdbId: '123',
+        mediaType: 'series',
+      });
+      expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
     });
 
     it('renders a poster image if posterUrl is provided', () => {
-      const row = buildResultRow(
-        { ...mockItem, posterUrl: 'https://image.test/p.jpg' },
-        'Emby',
-        'https://jsr.test',
-      );
+      const row = buildResultRow({ ...mockItem, posterUrl: 'https://image.test/p.jpg' }, 'Emby');
       const img = row.querySelector('img');
       expect(img).to.exist;
       expect(img?.src).to.equal('https://image.test/p.jpg');

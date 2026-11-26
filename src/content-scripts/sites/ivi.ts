@@ -228,7 +228,7 @@ const showIviSkeleton = (serverLabel: string): void => {
 export const injectIviCard = (response: SearchJellyseerrResponse, queryTitle: string): void => {
   if (document.getElementById(IVI_CARD_ID)) return;
 
-  const { results, jellyseerrEnabled, serverType, jellyseerrUrl, error } = response.payload;
+  const { results, jellyseerrEnabled, serverType, error } = response.payload;
   const serverLabel = serverType === 'jellyfin' ? 'Jellyfin' : 'Emby';
 
   const card = document.createElement('div');
@@ -245,7 +245,7 @@ export const injectIviCard = (response: SearchJellyseerrResponse, queryTitle: st
     card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
   } else {
     results.forEach((item, idx) => {
-      const row = buildResultRow(item, serverLabel, jellyseerrUrl);
+      const row = buildResultRow(item, serverLabel);
       if (idx > 0) {
         row.style.borderTop = '1px solid rgba(255,255,255,0.06)';
         row.style.paddingTop = '12px';

@@ -25,7 +25,7 @@ describe('search-sidebar', () => {
     expect(firstTitle?.textContent).to.contain('The Matrix');
 
     const availableBtn = rows?.[0].querySelector('button');
-    expect(availableBtn?.textContent?.trim()).to.contain('Play on Emby');
+    expect(availableBtn?.textContent?.trim()).to.equal('▶ Emby');
   });
 
   it('renders no results message', async () => {
@@ -110,16 +110,15 @@ describe('search-sidebar', () => {
     expect(pendingBtn?.textContent?.includes('Pending')).to.be.true;
   });
 
-  it('renders Manage in Jellyseerr button for available items', async () => {
+  it('gives every result one button', async () => {
     const el = await fixture<SearchSidebar>(
       html`<search-sidebar .response="${mockSearchResponses.multiple}"></search-sidebar>`,
     );
 
-    const rows = el.shadowRoot?.querySelectorAll('.result-row');
-    const manageBtn = Array.from(rows?.[0].querySelectorAll('button') || []).find((b) =>
-      b.textContent?.includes('Manage'),
+    const rows = Array.from(el.shadowRoot?.querySelectorAll('.result-row') ?? []);
+    expect(rows.map((row) => row.querySelectorAll('button').length)).to.deep.equal(
+      rows.map(() => 1),
     );
-    expect(manageBtn).to.exist;
   });
 
   it('handles request button click', async () => {
@@ -158,11 +157,17 @@ describe('search-sidebar', () => {
       (window as unknown as { chrome?: unknown }).chrome = savedChrome;
     });
 
-    it('asks the service worker to open Jellyseerr from a pending request', async () => {
+    /** The dialog the Jellyseerr buttons open (see media-dialog.ts), removed after each test. */
+    const dialogHost = () => document.getElementById('media-connector-dialog-host');
+    afterEach(() => dialogHost()?.remove());
+
+    it('opens the media dialog from a pending request', async () => {
       const pendingResponse: SearchJellyseerrResponse = {
         type: 'SEARCH_JELLYSEERR_RESPONSE',
         payload: {
-          results: [{ id: 123, title: 'Pending Movie', status: 'pending', mediaType: 'movie' }],
+          results: [
+            { id: 123, title: 'Pending Movie', year: 2001, status: 'pending', mediaType: 'movie' },
+          ],
           jellyseerrEnabled: true,
           serverType: 'emby',
           jellyseerrUrl: 'https://jsr.test',
@@ -174,27 +179,58 @@ describe('search-sidebar', () => {
 
       (el.shadowRoot?.querySelector('.result-row button') as HTMLButtonElement).click();
 
+      expect(dialogHost()?.shadowRoot?.querySelector('dialog')?.open).to.equal(true);
       expect(sent).to.deep.equal([
-        { type: 'OPEN_TAB', payload: { url: 'https://jsr.test/movie/123' } },
+        {
+          type: 'GET_MEDIA_DETAILS',
+          payload: { title: 'Pending Movie', year: 2001, tmdbId: '123', mediaType: 'movie' },
+        },
       ]);
     });
 
-    it('asks the service worker to open Jellyseerr from an available title', async () => {
+    it('opens the media dialog, not the server, from an available series', async () => {
       const el = await fixture<SearchSidebar>(
         html`<search-sidebar .response="${mockSearchResponses.multiple}"></search-sidebar>`,
       );
-      const jellyseerrUrl = mockSearchResponses.multiple.payload.jellyseerrUrl;
       const tvRow = el.shadowRoot?.querySelectorAll('.result-row')[1];
-      const manageBtn = Array.from(tvRow?.querySelectorAll('button') ?? []).find((b) =>
-        b.textContent?.includes('Manage'),
-      ) as HTMLButtonElement;
+      const openWindow = window.open;
+      let opened = false;
+      window.open = () => {
+        opened = true;
+        return null;
+      };
 
-      manageBtn.click();
+      (tvRow?.querySelector('button') as HTMLButtonElement).click();
+      window.open = openWindow;
+      expect(opened).to.equal(false);
 
-      const tvId = mockSearchResponses.multiple.payload.results[1].id;
+      const tv = mockSearchResponses.multiple.payload.results[1];
       expect(sent).to.deep.equal([
-        { type: 'OPEN_TAB', payload: { url: `${jellyseerrUrl}/tv/${tvId}` } },
+        {
+          type: 'GET_MEDIA_DETAILS',
+          payload: { title: tv.title, year: tv.year, tmdbId: String(tv.id), mediaType: 'series' },
+        },
       ]);
+    });
+
+    it('opens the media dialog from Request instead of requesting at once', async () => {
+      const response: SearchJellyseerrResponse = {
+        type: 'SEARCH_JELLYSEERR_RESPONSE',
+        payload: {
+          results: [{ id: 7, title: 'New Show', status: 'not_requested', mediaType: 'tv' }],
+          jellyseerrEnabled: true,
+          serverType: 'jellyfin',
+          jellyseerrUrl: 'https://jsr.test',
+        },
+      };
+      const el = await fixture<SearchSidebar>(
+        html`<search-sidebar .response="${response}"></search-sidebar>`,
+      );
+
+      (el.shadowRoot?.querySelector('.result-row button') as HTMLButtonElement).click();
+
+      expect(sent.map((m) => (m as { type: string }).type)).to.deep.equal(['GET_MEDIA_DETAILS']);
+      expect(dialogHost()).to.exist;
     });
 
     it('opens the extension settings from the header', async () => {
@@ -238,7 +274,7 @@ describe('search-sidebar in Russian', () => {
     const rows = el.shadowRoot?.querySelectorAll('.result-row');
     expect(rows?.[0].querySelector('.type-label')?.textContent).to.equal('Фильм');
     expect(rows?.[0].textContent).to.contain('✓ В библиотеке');
-    expect(rows?.[0].querySelector('button')?.textContent).to.contain('▶ Смотреть в Emby');
-    expect(rows?.[2].querySelector('button')?.textContent).to.contain('＋ Запросить');
+    expect(rows?.[0].querySelector('button')?.textContent?.trim()).to.equal('▶ Emby');
+    expect(rows?.[2].querySelector('button')?.textContent?.trim()).to.equal('＋ Запросить…');
   });
 });

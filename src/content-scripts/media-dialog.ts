@@ -17,6 +17,7 @@ import { getLanguage, t, type MessageKey } from '../i18n/index.js';
 import type { DetectedMedia } from '../types/index.js';
 import type {
   GetMediaDetailsMessage,
+  JellyseerrResultItem,
   MediaDetailsResponse,
   MediaDetailsSeason,
   MediaRequestState,
@@ -36,6 +37,14 @@ export const dialogTargetFromMedia = (media: DetectedMedia): MediaDialogTarget =
   imdbId: media.imdbId,
   tmdbId: media.tmdbId,
   mediaType: media.type === 'movie' ? 'movie' : 'series',
+});
+
+/** The dialog's target for a Jellyseerr search result: its own TMDB ID, title and year. */
+export const dialogTargetFromResult = (item: JellyseerrResultItem): MediaDialogTarget => ({
+  title: item.title,
+  year: item.year,
+  tmdbId: String(item.id),
+  mediaType: item.mediaType === 'movie' ? 'movie' : 'series',
 });
 
 type Details = MediaDetailsResponse['payload'];

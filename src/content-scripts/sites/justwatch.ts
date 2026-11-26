@@ -6,9 +6,9 @@ import {
   createInfoRow,
   buildResultRow,
   injectSkeletonKeyframes,
-  requestFromSidebar,
 } from '../common-ui.js';
 import { tryDetectMedia } from '../index.js';
+import { dialogTargetFromResult, openMediaDialog } from '../media-dialog.js';
 import { getJustWatchPageType } from '../content-script-helpers.js';
 import type { SearchJellyseerrResponse, GetConfigResponse } from '../../types/messages.js';
 import { t } from '../../i18n/index.js';
@@ -247,7 +247,7 @@ const removeJustWatchSkeleton = (): void => {
 const injectJustWatchCard = (response: SearchJellyseerrResponse, queryTitle: string): void => {
   if (document.getElementById(JUSTWATCH_CARD_ID)) return;
 
-  const { results, jellyseerrEnabled, serverType, jellyseerrUrl, error } = response.payload;
+  const { results, jellyseerrEnabled, serverType, error } = response.payload;
   const serverLabel = serverType === 'jellyfin' ? 'Jellyfin' : 'Emby';
 
   const card = document.createElement('div');
@@ -307,7 +307,7 @@ const injectJustWatchCard = (response: SearchJellyseerrResponse, queryTitle: str
   }
 
   results.forEach((item, idx) => {
-    const row = buildResultRow(item, serverLabel, jellyseerrUrl);
+    const row = buildResultRow(item, serverLabel);
     if (idx > 0) {
       row.style.borderTop = '1px solid rgba(255,255,255,0.06)';
       row.style.paddingTop = '12px';
@@ -422,7 +422,7 @@ const processJustWatchSearchRow = async (
 
   if (!response) return;
 
-  const { results, jellyseerrEnabled, error, jellyseerrUrl } = response.payload;
+  const { results, jellyseerrEnabled, error } = response.payload;
   if (!jellyseerrEnabled || error || results.length === 0) return;
 
   const item = results[0];
@@ -460,16 +460,8 @@ const processJustWatchSearchRow = async (
       color: '#fff',
       boxShadow: `0 2px 8px ${serverBg}55`,
     });
-    const playText =
-      item.status === 'partial'
-        ? t('playOnServerPartial', serverLabel)
-        : t('playOnServer', serverLabel);
-    btn.innerHTML = `${iconHtml}<span>▶ ${playText}</span>`;
-    if (item.serverItemUrl) {
-      btn.href = item.serverItemUrl;
-      btn.target = '_blank';
-      btn.rel = 'noopener';
-    }
+    const label = item.status === 'partial' ? t('serverPartial', serverLabel) : serverLabel;
+    btn.innerHTML = `${iconHtml}<span>▶ ${label}</span>`;
     btn.addEventListener('mouseenter', () => {
       btn.style.background = serverBgHover;
       btn.style.boxShadow = `0 4px 14px ${serverBg}77`;
@@ -485,18 +477,8 @@ const processJustWatchSearchRow = async (
       ...baseBtnStyles,
       background: '#616161',
       color: '#ccc',
-      cursor: jellyseerrUrl ? 'pointer' : 'default',
     });
     btn.innerHTML = `${iconHtml}<span>⏳ ${t('requestPending')}</span>`;
-    if (jellyseerrUrl) {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
-        const url = `${jellyseerrUrl}/${slug}/${item.id}`;
-        sendMessage({ type: 'OPEN_TAB', payload: { url } });
-      });
-    }
   } else {
     Object.assign(btn.style, {
       ...baseBtnStyles,
@@ -504,7 +486,7 @@ const processJustWatchSearchRow = async (
       color: '#d0bcff',
       border: '1px solid rgba(123, 47, 190, 0.5)',
     });
-    btn.innerHTML = `${iconHtml}<span>＋ ${t('requestOnServer', serverLabel)}</span>`;
+    btn.innerHTML = `${iconHtml}<span>＋ ${t('requestMore')}</span>`;
     btn.addEventListener('mouseenter', () => {
       btn.style.background = 'rgba(123, 47, 190, 0.35)';
       btn.style.transform = 'translateY(-1px)';
@@ -513,30 +495,15 @@ const processJustWatchSearchRow = async (
       btn.style.background = 'rgba(123, 47, 190, 0.2)';
       btn.style.transform = 'translateY(0)';
     });
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const label = btn.querySelector('span:last-child');
-      if (label) label.textContent = t('requesting');
-      btn.style.opacity = '0.6';
-      btn.style.pointerEvents = 'none';
-      const ok = await requestFromSidebar(item);
-      if (ok) {
-        if (label) label.textContent = `✓ ${t('requestedOnServer', serverLabel)}`;
-        btn.style.background = '#4CAF50';
-        btn.style.color = '#fff';
-        btn.style.border = '1px solid #4CAF50';
-        btn.style.opacity = '1';
-      } else {
-        if (label) label.textContent = `✗ ${t('requestFailedRetry')}`;
-        btn.style.opacity = '1';
-        btn.style.pointerEvents = 'auto';
-        setTimeout(() => {
-          if (label) label.textContent = `＋ ${t('requestOnServer', serverLabel)}`;
-        }, 3000);
-      }
-    });
   }
+
+  // One button, as on Trakt: whatever the state, it opens the media dialog, which has the
+  // server link, the request and the seasons.
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openMediaDialog(dialogTargetFromResult(item));
+  });
 
   titleLink.insertAdjacentElement('afterend', btn);
 };
