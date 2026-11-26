@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+  Public Netflix title page (no sign-in) for a film, as served at
+  /de/title/81458416 (German UI) in November 2026. Trimmed to the markup the
+  content script reads: JSON-LD, the visually hidden <h1> and the metadata
+  list, whose first item is the release year.
+-->
+<html lang="de-DE">
+  <head>
+    <meta charset="utf-8" />
+    <title>„Glass Onion: A Knives Out Mystery“ ansehen | Netflix – offizielle Webseite</title>
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "Movie",
+        "url": "https://www.netflix.com/de/title/81458416",
+        "contentRating": "12",
+        "name": "Glass Onion: A Knives Out Mystery",
+        "genre": "Comedies",
+        "dateCreated": "2022-12-23"
+      }
+    </script>
+  </head>
+  <body>
+    <div data-uia="loc">
+      <div data-uia="header">
+        <a data-uia="header-signin-link" href="/login">Einloggen</a>
+      </div>
+      <span><h1>Glass Onion: A Knives Out Mystery</h1></span>
+      <main>
+        <div data-uia="hero">
+          <span>Glass Onion: A Knives Out Mystery</span>
+          <form data-uia="cta-email-form" method="post">
+            <label for="email">E-Mail-Adresse</label>
+            <input id="email" data-uia="email-input" type="email" name="hero-cta-email" />
+            <button data-uia="join-now-btn" type="button">Jetzt Mitglied werden</button>
+          </form>
+        </div>
+        <div data-uia="body-content">
+          <div data-uia="metadata">
+            <h2>Glass Onion: A Knives Out Mystery</h2>
+            <ul>
+              <li>2022</li>
+              <li>12</li>
+              <li>Comedy</li>
+            </ul>
+            <div data-uia="title-info-synopsis-talent">
+              <span>Benoit Blanc reist nach Griechenland.</span>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div data-uia="floating-cta">
+        <button data-uia="join-now-btn" type="button">Jetzt Mitglied werden</button>
+      </div>
+    </div>
+  </body>
+</html>

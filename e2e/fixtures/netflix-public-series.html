@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+  Public Netflix title page (no sign-in) for a series, as served at
+  /de-en/title/80057281 in November 2026. Trimmed to the markup the content
+  script reads: JSON-LD, the visually hidden <h1>, the metadata list and the
+  episodes section. The year in the metadata list is the latest season's.
+-->
+<html lang="en-DE">
+  <head>
+    <meta charset="utf-8" />
+    <title>Watch Stranger Things | Netflix Official Site</title>
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "TVSeries",
+        "url": "https://www.netflix.com/de-en/title/80057281",
+        "contentRating": "16",
+        "name": "Stranger Things",
+        "genre": "Horror",
+        "dateCreated": "2017-10-27",
+        "startDate": "2025-1-1",
+        "numberOfSeasons": 5
+      }
+    </script>
+  </head>
+  <body>
+    <div data-uia="loc">
+      <div data-uia="header">
+        <a data-uia="header-signin-link" href="/login">Sign In</a>
+      </div>
+      <span><h1>Stranger Things</h1></span>
+      <main>
+        <div data-uia="hero">
+          <span>Stranger Things</span>
+          <form data-uia="cta-email-form" method="post">
+            <label for="email">Email address</label>
+            <input id="email" data-uia="email-input" type="email" name="hero-cta-email" />
+            <button data-uia="join-now-btn" type="button">Join Now</button>
+          </form>
+        </div>
+        <div data-uia="body-content">
+          <div data-uia="metadata">
+            <h2>Stranger Things</h2>
+            <ul>
+              <li>2025</li>
+              <li>5 Seasons</li>
+              <li>16</li>
+              <li>Sci-Fi</li>
+            </ul>
+            <div data-uia="title-info-synopsis-talent">
+              <span>A boy vanishes and a small town uncovers a mystery.</span>
+            </div>
+          </div>
+          <div id="episodes" data-uia="episodes">
+            <h2>Episodes</h2>
+            <div data-uia="season-selector">
+              <label for="season">Select Season</label>
+              <select id="season" name="seasonSelect">
+                <option value="80077209" selected>Stranger Things</option>
+                <option value="80117715">Stranger Things 2</option>
+              </select>
+            </div>
+            <div data-uia="episode-card">
+              <p data-uia="episode-title">Chapter One</p>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div data-uia="floating-cta">
+        <button data-uia="join-now-btn" type="button">Join Now</button>
+      </div>
+    </div>
+  </body>
+</html>

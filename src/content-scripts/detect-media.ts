@@ -248,25 +248,65 @@ const detectFromTrakt = (): DetectedMedia | undefined => {
 };
 
 /**
- * Detect media from Netflix pages.
+ * Read the schema.org `Movie` / `TVSeries` block that Netflix's public title
+ * pages embed as JSON-LD.
+ */
+const readNetflixJsonLd = (): { type: 'movie' | 'series'; name?: string } | undefined => {
+  const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+  for (const script of scripts) {
+    try {
+      const data: unknown = JSON.parse(script.textContent ?? '');
+      if (!data || typeof data !== 'object') continue;
+      const { '@type': type, name } = data as Record<string, unknown>;
+      if (type !== 'Movie' && type !== 'TVSeries') continue;
+      return {
+        type: type === 'TVSeries' ? 'series' : 'movie',
+        name: typeof name === 'string' ? name.trim() || undefined : undefined,
+      };
+    } catch {
+      // Not JSON: skip it.
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Detect media from Netflix title pages: `/title/<id>`, or `/<country>[-<lang>]/title/<id>`
+ * that Netflix redirects to (e.g. `/de-en/title/80057281`).
+ *
+ * The public page (no sign-in) carries a JSON-LD `Movie`/`TVSeries` block with the
+ * title, an `<h1>`, and a metadata list (`2022 · 12 · Comedy`, or
+ * `2025 · 5 Seasons · 16 · Sci-Fi` for a show). Both the title and the season
+ * label follow the page's language.
  */
 const detectFromNetflix = (): DetectedMedia | undefined => {
-  // Netflix title pages: /title/XXXXXXXX
+  const jsonLd = readNetflixJsonLd();
+
   const titleElement =
     document.querySelector('.title-title') ??
     document.querySelector('[data-uia="video-title"]') ??
     document.querySelector('h1');
 
-  const title = titleElement?.textContent?.trim();
+  const title = jsonLd?.name ?? titleElement?.textContent?.trim();
   if (!title) return undefined;
 
-  // Check for episodes indicator
-  const episodeSelector = document.querySelector('[data-uia="episode-item"]');
-  if (episodeSelector) {
+  const isSeries = jsonLd
+    ? jsonLd.type === 'series'
+    : !!document.querySelector(
+        '[data-uia="episodes"], [data-uia="season-selector"], [data-uia="episode-item"]',
+      );
+
+  // A show's year on Netflix is that of its latest season (Stranger Things shows 2025),
+  // and its JSON-LD dates are no better, so a series goes without one.
+  if (isSeries) {
     return { type: 'series', title };
   }
 
-  return { type: 'movie', title };
+  // For a film the first metadata item is its release year.
+  const yearElement = document.querySelector('[data-uia="metadata"] li');
+  const year = yearElement ? extractYear(yearElement.textContent ?? '') : undefined;
+
+  return { type: 'movie', title, year };
 };
 
 /**
