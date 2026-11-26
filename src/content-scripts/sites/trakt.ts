@@ -1,4 +1,5 @@
 import { EMBY_SVG, JELLYFIN_SVG, sendMessage } from '../common-ui.js';
+import { JELLYSEERR_SVG } from '../../assets/jellyseerr-logo.js';
 import { tryDetectMedia, buildPayload } from '../index.js';
 import { t } from '../../i18n/index.js';
 import { dialogTargetFromMedia, openMediaDialog } from '../media-dialog.js';
@@ -120,7 +121,9 @@ export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
   const status = response.payload.status;
   const serverType = response.payload.serverType ?? 'emby';
   const serverLabel = serverType === 'jellyfin' ? 'Jellyfin' : 'Emby';
-  const logoSvg = serverType === 'jellyfin' ? JELLYFIN_SVG : EMBY_SVG;
+  // Request goes to Jellyseerr: its logo then, not the server's.
+  const logoSvg =
+    status === 'unavailable' ? JELLYSEERR_SVG : serverType === 'jellyfin' ? JELLYFIN_SVG : EMBY_SVG;
 
   // Don't duplicate — if our element already exists, skip
   if (document.getElementById('media-connector-wtw-item')) return;
@@ -237,7 +240,8 @@ export const tryInjectTraktLegacyButton = (response: CheckMediaResponse): void =
 
   const serverType = response.payload.serverType ?? 'emby';
   const serverLabel = serverType === 'jellyfin' ? 'Jellyfin' : 'Emby';
-  const logoSvg = serverType === 'jellyfin' ? JELLYFIN_SVG : EMBY_SVG;
+  // Request goes to Jellyseerr: its logo then, not the server's.
+  const logoSvg = canRequest ? JELLYSEERR_SVG : serverType === 'jellyfin' ? JELLYFIN_SVG : EMBY_SVG;
   const serverColor = serverType === 'jellyfin' ? '#00A4DC' : '#52B54B';
 
   // Build the btn matching Trakt's native action button structure

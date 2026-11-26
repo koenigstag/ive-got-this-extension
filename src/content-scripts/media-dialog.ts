@@ -12,7 +12,17 @@
  * that the search sidebar installs (see `sites/search-engine.ts`).
  */
 import { html, nothing, render, type TemplateResult } from 'lit/html.js';
-import { openExtensionSettings, openInNewTab, sendMessage } from './common-ui.js';
+// Only re-exports lit-html: no LitElement, so it is safe in the content script.
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import {
+  buildProwlarrSearchUrl,
+  openExtensionSettings,
+  openInNewTab,
+  processingStatusKey,
+  sendMessage,
+} from './common-ui.js';
+import { jellyseerrSvg } from '../assets/jellyseerr-logo.js';
+import { prowlarrSvg } from '../assets/prowlarr-icon.svg.js';
 import { getLanguage, t, type MessageKey } from '../i18n/index.js';
 import type { DetectedMedia } from '../types/index.js';
 import type {
@@ -181,6 +191,12 @@ const STYLES = /* css */ `
     gap: 8px;
     margin-top: 10px;
   }
+  button.request,
+  button.release {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
   button {
     padding: 7px 14px;
     border: 1px solid #3a3b42;
@@ -285,8 +301,12 @@ const applyStyles = (root: ShadowRoot): void => {
   }
 };
 
-const statusChip = (status: MediaStatusLabel | undefined) =>
-  status ? html`<span class="chip ${status}">${t(STATUS_KEYS[status])}</span>` : nothing;
+const statusChip = (status: MediaStatusLabel | undefined, mediaType?: 'movie' | 'series') =>
+  status
+    ? html`<span class="chip ${status}"
+        >${t(status === 'processing' ? processingStatusKey(mediaType) : STATUS_KEYS[status])}</span
+      >`
+    : nothing;
 
 const formatDate = (iso: string | undefined): string | undefined => {
   if (!iso) return undefined;
@@ -445,13 +465,36 @@ export const openMediaDialog = (target: MediaDialogTarget): void => {
                 <span>${t('dialogSeason', season.seasonNumber)}</span>
               </label>
               ${episodes ? html`<span class="count">${episodes}</span>` : nothing}
-              ${statusChip(season.status)}
+              ${statusChip(season.status, 'series')}
             </li>
           `;
         })}
       </ul>
     `;
   };
+
+  /**
+   * "Find a release": Prowlarr's search for the title, in a new tab, when Prowlarr is set
+   * up. For when Jellyseerr's request can't help: a title TMDB lacks, or one Sonarr and
+   * Radarr don't find (a Russian release under its Russian name). Searches the name
+   * Jellyseerr gives in the UI language, else the page's.
+   */
+  const releaseButton = (details: Details): TemplateResult | typeof nothing => {
+    const prowlarrUrl = details.prowlarrUrl;
+    if (!prowlarrUrl) return nothing;
+    const query = details.jellyseerr.state === 'found' ? details.jellyseerr.title : target.title;
+    const mediaType = details.mediaType === 'movie' ? 'movie' : 'tv';
+    return html`<button
+      class="release"
+      title=${t('findReleaseHint', query)}
+      @click=${() => openInNewTab(buildProwlarrSearchUrl(prowlarrUrl, query, mediaType))}
+    >
+      ${unsafeHTML(prowlarrSvg(16))}${t('findRelease')}
+    </button>`;
+  };
+
+  const releaseActions = (details: Details): TemplateResult | typeof nothing =>
+    details.prowlarrUrl ? html`<div class="actions">${releaseButton(details)}</div>` : nothing;
 
   const jellyseerrSection = (details: Details): TemplateResult => {
     const seerr = details.jellyseerr;
@@ -484,10 +527,11 @@ export const openMediaDialog = (target: MediaDialogTarget): void => {
                 ?disabled=${sending || (isSeries && selected.size === 0)}
                 @click=${() => sendRequest(details)}
               >
-                ${sending ? t('requesting') : requestLabel}
+                ${sending ? t('requesting') : html`${unsafeHTML(jellyseerrSvg(16))}${requestLabel}`}
               </button>`
             : nothing}
           <button @click=${() => openInNewTab(seerr.url)}>${t('dialogOpenInJellyseerr')}</button>
+          ${releaseButton(details)}
         </div>
       `;
     } else if (seerr.state === 'disabled') {
@@ -496,19 +540,23 @@ export const openMediaDialog = (target: MediaDialogTarget): void => {
         ${seasonsList(details)}
         <div class="actions">
           <button @click=${() => openExtensionSettings()}>${t('openSettings')}</button>
+          ${releaseButton(details)}
         </div>
       `;
     } else if (seerr.state === 'error') {
       body = html`<p class="error">${t('dialogJellyseerrError', seerr.message)}</p>
-        ${seasonsList(details)}`;
+        ${seasonsList(details)} ${releaseActions(details)}`;
     } else {
       body = html`<p class="muted">${t('dialogJellyseerrNotFound')}</p>
-        ${seasonsList(details)}`;
+        ${seasonsList(details)} ${releaseActions(details)}`;
     }
 
     return html`
       <section class="jellyseerr-section">
-        <h3>Jellyseerr ${seerr.state === 'found' ? statusChip(seerr.status) : nothing}</h3>
+        <h3>
+          Jellyseerr
+          ${seerr.state === 'found' ? statusChip(seerr.status, details.mediaType) : nothing}
+        </h3>
         ${body}
         ${result
           ? // One line: the message keeps its own line breaks (pre-line).

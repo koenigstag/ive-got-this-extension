@@ -5,6 +5,7 @@ import type { JellyseerrResultItem, SearchJellyseerrResponse } from '../types/me
 import { t } from '../i18n/index.js';
 import { dialogTargetFromResult, openMediaDialog } from './media-dialog.js';
 import { prowlarrSvg } from '../assets/prowlarr-icon.svg.js';
+import { jellyseerrSvg } from '../assets/jellyseerr-logo.js';
 
 /**
  * Detect media from the current page, returning `undefined` when nothing is found.
@@ -174,9 +175,25 @@ export const createActionButton = (
 };
 
 /**
+ * Jellyseerr's "processing" means the request went to Sonarr (series) or Radarr
+ * (movie), not that anything is downloading: the label says where it went.
+ */
+export const processingStatusKey = (
+  mediaType: 'movie' | 'tv' | 'series' | undefined,
+): 'statusProcessingMovie' | 'statusProcessingTv' | 'statusProcessing' =>
+  mediaType === 'movie'
+    ? 'statusProcessingMovie'
+    : mediaType
+      ? 'statusProcessingTv'
+      : 'statusProcessing';
+
+/**
  * Build an HTML string for a status badge.
  */
-export const buildStatusBadge = (status: JellyseerrResultItem['status']): string => {
+export const buildStatusBadge = (
+  status: JellyseerrResultItem['status'],
+  mediaType?: 'movie' | 'tv',
+): string => {
   const map: Record<JellyseerrResultItem['status'], { label: string; bg: string; fg: string }> = {
     available: {
       label: `✓ ${t('statusAvailable')}`,
@@ -186,7 +203,7 @@ export const buildStatusBadge = (status: JellyseerrResultItem['status']): string
     partial: { label: `◐ ${t('statusPartial')}`, bg: 'rgba(255,152,0,0.15)', fg: '#FFB74D' },
     pending: { label: `⏳ ${t('statusPending')}`, bg: 'rgba(97,97,97,0.2)', fg: '#BDBDBD' },
     processing: {
-      label: `⚙ ${t('statusProcessing')}`,
+      label: `⚙ ${t(processingStatusKey(mediaType))}`,
       bg: 'rgba(97,97,97,0.2)',
       fg: '#BDBDBD',
     },
@@ -229,7 +246,13 @@ export const resultAction = (
   if (status === 'pending' || status === 'processing') {
     return { text: `⏳ ${t('requestPending')}`, background: '#616161', hover: '#424242' };
   }
-  return { text: `＋ ${t('requestMore')}`, background: '#7B2FBE', hover: '#5E1F9B' };
+  // Jellyseerr's logo: the request goes there.
+  return {
+    text: t('requestMore'),
+    background: '#7B2FBE',
+    hover: '#5E1F9B',
+    icon: jellyseerrSvg(15),
+  };
 };
 
 /**
@@ -280,7 +303,7 @@ export const buildResultRow = (item: JellyseerrResultItem, serverLabel: string):
       ${item.title}${yearStr}
     </div>
     <div style="font-size:11px;color:#a89cc0;">${typeLabel}</div>
-    ${buildStatusBadge(item.status)}
+    ${buildStatusBadge(item.status, item.mediaType)}
   `;
 
   /* action buttons */

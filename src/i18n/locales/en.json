@@ -37,7 +37,13 @@
     "message": "Pending"
   },
   "statusProcessing": {
-    "message": "Processing"
+    "message": "Sent for download"
+  },
+  "statusProcessingTv": {
+    "message": "Sent to Sonarr"
+  },
+  "statusProcessingMovie": {
+    "message": "Sent to Radarr"
   },
   "statusUnknown": {
     "message": "Unknown"

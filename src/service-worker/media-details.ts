@@ -273,6 +273,7 @@ export const getMediaDetailsEffect = (
         server,
         jellyseerr,
         seasons,
+        prowlarrUrl: config.prowlarr?.serverUrl.trim().replace(/\/+$/, '') || undefined,
       },
     };
   });

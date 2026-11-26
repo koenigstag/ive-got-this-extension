@@ -301,6 +301,8 @@ describe('search-sidebar in Russian', () => {
     expect(rows?.[0].querySelector('.type-label')?.textContent).to.equal('Фильм');
     expect(rows?.[0].textContent).to.contain('✓ В библиотеке');
     expect(rows?.[0].querySelector('button')?.textContent?.trim()).to.equal('Emby');
-    expect(rows?.[2].querySelector('button')?.textContent?.trim()).to.equal('＋ Запросить…');
+    expect(rows?.[2].querySelector('button')?.textContent?.trim()).to.equal('Запросить…');
+    // Jellyseerr's logo on Request: the request goes there.
+    expect(rows?.[2].querySelector('button svg [id^="mc-jsr-"]')).to.exist;
   });
 });
