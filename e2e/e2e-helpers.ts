@@ -153,6 +153,26 @@ export const mockResponses = {
     },
   },
 
+  mediaDetailsMovie: {
+    type: 'MEDIA_DETAILS_RESPONSE',
+    payload: {
+      serverType: 'emby',
+      mediaType: 'movie',
+      server: { state: 'missing' },
+      jellyseerr: {
+        state: 'found',
+        tmdbId: 603,
+        title: 'The Matrix',
+        year: 1999,
+        status: 'not_requested',
+        url: 'http://localhost:5055/movie/603',
+        requestable: true,
+        requests: [],
+      },
+      seasons: [],
+    },
+  },
+
   mediaDetailsSeries: {
     type: 'MEDIA_DETAILS_RESPONSE',
     payload: {

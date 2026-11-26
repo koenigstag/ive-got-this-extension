@@ -1,8 +1,9 @@
 import { Option, Effect } from 'effect';
 import { detectMediaOption } from './detect-media.js';
 import { buildCheckPayloadEffect } from './content-script-helpers.js';
-import type { RequestMediaResponse, JellyseerrResultItem } from '../types/messages.js';
+import type { JellyseerrResultItem } from '../types/messages.js';
 import { t } from '../i18n/index.js';
+import { dialogTargetFromResult, openMediaDialog } from './media-dialog.js';
 
 /**
  * Detect media from the current page, returning `undefined` when nothing is found.
@@ -107,67 +108,6 @@ export const COMBINED_SVG = `<svg width="48" height="48" viewBox="0 0 512 512" f
     </g>
   </g>
 </svg>`;
-
-/**
- * Handle click on the request button - sends request via Jellyseerr.
- */
-export const handleRequestClick = async (): Promise<void> => {
-  const media = tryDetectMedia();
-  if (!media) return;
-
-  const title =
-    media.type === 'season' || media.type === 'episode' ? media.seriesTitle : media.title;
-  const mediaType = media.type === 'movie' ? ('movie' as const) : ('series' as const);
-
-  const response = await sendMessage<RequestMediaResponse>({
-    type: 'REQUEST_MEDIA',
-    payload: {
-      title,
-      year: media.year,
-      tmdbId: media.tmdbId,
-      imdbId: media.imdbId,
-      mediaType,
-    },
-  });
-
-  if (response?.payload.success) {
-    alert(t('alertRequested', title));
-  } else {
-    alert(t('alertRequestFailed', title, response?.payload.message || t('unknownError')));
-  }
-};
-
-/**
- * Request an item via Jellyseerr from the sidebar.
- */
-export const requestFromSidebar = async (item: JellyseerrResultItem): Promise<boolean> => {
-  const mediaType = item.mediaType === 'movie' ? ('movie' as const) : ('series' as const);
-
-  console.log(
-    "[I've got this!] Requesting media:",
-    `\n  Title: ${item.title}\n  TMDb ID: ${item.id}\n  Type: ${mediaType}\n  (server details will appear in the service worker console)`,
-  );
-
-  const response = await sendMessage<{
-    type: string;
-    payload: { success: boolean; message: string };
-  }>({
-    type: 'REQUEST_MEDIA',
-    payload: {
-      title: item.title,
-      year: item.year,
-      tmdbId: String(item.id),
-      mediaType,
-    },
-  });
-
-  console.log(
-    "[I've got this!] Request response:",
-    `\n  Success: ${response?.payload.success ?? false}\n  Message: ${response?.payload.message ?? '(no response)'}`,
-  );
-
-  return response?.payload.success ?? false;
-};
 
 /**
  * Create a styled action button.
@@ -312,54 +252,21 @@ export const buildResultRow = (
       });
       btnContainer.appendChild(serverBtn);
     }
-    /* "Manage in Jellyseerr" → opens via service worker to bypass SameSite cookies */
+    /* "Manage in Jellyseerr" → the media dialog, which links to Jellyseerr */
     if (jellyseerrUrl) {
-      const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
       const manageBtn = createActionButton(t('manageInJellyseerr'), '#7B2FBE', '#5E1F9B');
-      manageBtn.addEventListener('click', () => {
-        const url = `${jellyseerrUrl}/${slug}/${item.id}`;
-        console.log(`[I've got this!] Opening via service worker: ${url}`);
-        sendMessage({ type: 'OPEN_TAB', payload: { url } });
-      });
+      manageBtn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
       btnContainer.appendChild(manageBtn);
     }
   } else if (item.status === 'pending' || item.status === 'processing') {
     const pendingBtn = createActionButton(`⏳ ${t('requestPending')}`, '#616161', '#424242');
-    if (jellyseerrUrl) {
-      const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
-      pendingBtn.style.cursor = 'pointer';
-      pendingBtn.addEventListener('click', () => {
-        const url = `${jellyseerrUrl}/${slug}/${item.id}`;
-        console.log(`[I've got this!] Opening via service worker: ${url}`);
-        sendMessage({ type: 'OPEN_TAB', payload: { url } });
-      });
-    } else {
-      pendingBtn.style.cursor = 'default';
-    }
+    pendingBtn.style.cursor = 'pointer';
+    pendingBtn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
     btnContainer.appendChild(pendingBtn);
   } else {
-    /* not_requested / unknown */
+    /* not_requested / unknown: the dialog asks which seasons, then requests */
     const reqBtn = createActionButton(`＋ ${t('request')}`, '#7B2FBE', '#5E1F9B');
-    reqBtn.addEventListener('click', () => {
-      reqBtn.textContent = t('requesting');
-      reqBtn.style.opacity = '0.7';
-      reqBtn.style.pointerEvents = 'none';
-      requestFromSidebar(item).then((ok) => {
-        if (ok) {
-          reqBtn.textContent = `✓ ${t('requested')}`;
-          reqBtn.style.background = '#4CAF50';
-        } else {
-          reqBtn.textContent = `✗ ${t('requestFailed')}`;
-          reqBtn.style.background = '#c62828';
-          setTimeout(() => {
-            reqBtn.textContent = `＋ ${t('request')}`;
-            reqBtn.style.background = '#7B2FBE';
-            reqBtn.style.opacity = '1';
-            reqBtn.style.pointerEvents = 'auto';
-          }, 3000);
-        }
-      });
-    });
+    reqBtn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
     btnContainer.appendChild(reqBtn);
   }
 

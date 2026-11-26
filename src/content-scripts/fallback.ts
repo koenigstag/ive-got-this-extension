@@ -1,11 +1,13 @@
-import { handleRequestClick } from './common-ui.js';
+import { dialogTargetFromMedia, openMediaDialog } from './media-dialog.js';
 import type { CheckMediaResponse } from '../types/messages.js';
+import type { DetectedMedia } from '../types/index.js';
 import { t } from '../i18n/index.js';
 
 /**
  * Inject the media status indicator into the page.
+ * @param media - The title on the page; the request indicator opens the media dialog for it.
  */
-export const injectStatusIndicator = (response: CheckMediaResponse, _mediaType: string): void => {
+export const injectStatusIndicator = (response: CheckMediaResponse, media: DetectedMedia): void => {
   // Remove existing indicator if present
   const existing = document.getElementById('media-connector-indicator');
   if (existing) existing.remove();
@@ -66,7 +68,7 @@ export const injectStatusIndicator = (response: CheckMediaResponse, _mediaType: 
       <span>${t('requestWith', 'Jellyseerr')}</span>
     `;
     indicator.addEventListener('click', () => {
-      handleRequestClick();
+      openMediaDialog(dialogTargetFromMedia(media));
     });
   } else if (response.payload.status === 'unconfigured') {
     indicator.style.background = 'linear-gradient(135deg, #616161, #424242)';

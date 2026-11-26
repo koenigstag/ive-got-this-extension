@@ -14,7 +14,6 @@ vi.mock('../common-ui.js', async () => {
   return {
     ...actual,
     sendMessage: vi.fn(),
-    handleRequestClick: vi.fn(),
   };
 });
 
@@ -40,7 +39,7 @@ const mockObserve = vi.fn();
   (this as unknown as { disconnect: typeof mockDisconnect }).disconnect = mockDisconnect;
 });
 
-import { sendMessage, handleRequestClick } from '../common-ui.js';
+import { sendMessage } from '../common-ui.js';
 import { tryDetectMedia, buildPayload } from '../index.js';
 import { openMediaDialog } from '../media-dialog.js';
 
@@ -169,6 +168,7 @@ describe('Trakt Injection', () => {
         payload: { status: 'unavailable', serverType: 'jellyfin' },
       };
 
+      vi.mocked(tryDetectMedia).mockReturnValue({ type: 'series', title: 'Менталист', year: 2008 });
       tryInjectTraktRow(response);
 
       const row = document.getElementById('media-connector-trakt-row');
@@ -176,7 +176,9 @@ describe('Trakt Injection', () => {
 
       const link = row?.querySelector('.media-connector-request');
       (link as HTMLElement)?.click();
-      expect(handleRequestClick).toHaveBeenCalled();
+      expect(openMediaDialog).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Менталист', year: 2008, mediaType: 'series' }),
+      );
     });
   });
 
@@ -319,7 +321,9 @@ describe('Trakt Injection', () => {
       // Requesting happens in the dialog, not on the click
       vi.mocked(tryDetectMedia).mockReturnValue({ type: 'movie', title: 'The Matrix' });
       item?.click();
-      expect(handleRequestClick).not.toHaveBeenCalled();
+      expect(sendMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'REQUEST_MEDIA' }),
+      );
       expect(openMediaDialog).toHaveBeenCalled();
     });
 
@@ -374,10 +378,12 @@ describe('Trakt Injection', () => {
       const btn = document.getElementById('media-connector-trakt-action-btn');
       expect(btn?.textContent).to.contain('Request on Jellyfin');
 
-      vi.mocked(handleRequestClick).mockResolvedValue(undefined);
+      vi.mocked(tryDetectMedia).mockReturnValue({ type: 'movie', title: 'The Matrix', year: 1999 });
       btn?.click();
-      expect(handleRequestClick).toHaveBeenCalled();
-      expect(btn?.textContent).to.contain('Requesting…');
+      expect(openMediaDialog).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'The Matrix', year: 1999, mediaType: 'movie' }),
+      );
+      expect(btn?.textContent).to.contain('Request on Jellyfin');
     });
 
     it('inserts Unconfigured button when unconfigured', () => {

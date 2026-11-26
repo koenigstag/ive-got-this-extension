@@ -1,5 +1,5 @@
 import { identifySite } from './detect-media.js';
-import { sendMessage, handleRequestClick, tryDetectMedia, buildPayload } from './common-ui.js';
+import { sendMessage, tryDetectMedia, buildPayload } from './common-ui.js';
 import { initTrakt } from './sites/trakt.js';
 import { initImdb } from './sites/imdb.js';
 import { initJustWatchSPA } from './sites/justwatch.js';
@@ -9,7 +9,7 @@ import { injectStatusIndicator } from './fallback.js';
 import type { CheckMediaResponse, GetConfigResponse } from '../types/messages.js';
 import { setLanguage } from '../i18n/index.js';
 
-export { identifySite, handleRequestClick, tryDetectMedia, buildPayload };
+export { identifySite, tryDetectMedia, buildPayload };
 
 /**
  * Content script entry point.
@@ -64,7 +64,7 @@ const init = async (): Promise<void> => {
   });
 
   if (response) {
-    injectStatusIndicator(response, media.type);
+    injectStatusIndicator(response, media);
   }
 };
 

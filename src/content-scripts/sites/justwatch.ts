@@ -6,9 +6,9 @@ import {
   createInfoRow,
   buildResultRow,
   injectSkeletonKeyframes,
-  requestFromSidebar,
 } from '../common-ui.js';
 import { tryDetectMedia } from '../index.js';
+import { dialogTargetFromResult, openMediaDialog } from '../media-dialog.js';
 import { getJustWatchPageType } from '../content-script-helpers.js';
 import type { SearchJellyseerrResponse, GetConfigResponse } from '../../types/messages.js';
 import { t } from '../../i18n/index.js';
@@ -422,7 +422,7 @@ const processJustWatchSearchRow = async (
 
   if (!response) return;
 
-  const { results, jellyseerrEnabled, error, jellyseerrUrl } = response.payload;
+  const { results, jellyseerrEnabled, error } = response.payload;
   if (!jellyseerrEnabled || error || results.length === 0) return;
 
   const item = results[0];
@@ -485,18 +485,14 @@ const processJustWatchSearchRow = async (
       ...baseBtnStyles,
       background: '#616161',
       color: '#ccc',
-      cursor: jellyseerrUrl ? 'pointer' : 'default',
     });
     btn.innerHTML = `${iconHtml}<span>⏳ ${t('requestPending')}</span>`;
-    if (jellyseerrUrl) {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
-        const url = `${jellyseerrUrl}/${slug}/${item.id}`;
-        sendMessage({ type: 'OPEN_TAB', payload: { url } });
-      });
-    }
+    btn.style.cursor = 'pointer';
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openMediaDialog(dialogTargetFromResult(item));
+    });
   } else {
     Object.assign(btn.style, {
       ...baseBtnStyles,
@@ -513,28 +509,10 @@ const processJustWatchSearchRow = async (
       btn.style.background = 'rgba(123, 47, 190, 0.2)';
       btn.style.transform = 'translateY(0)';
     });
-    btn.addEventListener('click', async (e) => {
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const label = btn.querySelector('span:last-child');
-      if (label) label.textContent = t('requesting');
-      btn.style.opacity = '0.6';
-      btn.style.pointerEvents = 'none';
-      const ok = await requestFromSidebar(item);
-      if (ok) {
-        if (label) label.textContent = `✓ ${t('requestedOnServer', serverLabel)}`;
-        btn.style.background = '#4CAF50';
-        btn.style.color = '#fff';
-        btn.style.border = '1px solid #4CAF50';
-        btn.style.opacity = '1';
-      } else {
-        if (label) label.textContent = `✗ ${t('requestFailedRetry')}`;
-        btn.style.opacity = '1';
-        btn.style.pointerEvents = 'auto';
-        setTimeout(() => {
-          if (label) label.textContent = `＋ ${t('requestOnServer', serverLabel)}`;
-        }, 3000);
-      }
+      openMediaDialog(dialogTargetFromResult(item));
     });
   }
 

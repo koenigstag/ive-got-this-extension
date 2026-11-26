@@ -1,4 +1,4 @@
-import { EMBY_SVG, JELLYFIN_SVG, sendMessage, handleRequestClick } from '../common-ui.js';
+import { EMBY_SVG, JELLYFIN_SVG, sendMessage } from '../common-ui.js';
 import { tryDetectMedia, buildPayload } from '../index.js';
 import { t } from '../../i18n/index.js';
 import { dialogTargetFromMedia, openMediaDialog } from '../media-dialog.js';
@@ -288,11 +288,7 @@ export const tryInjectTraktLegacyButton = (response: CheckMediaResponse): void =
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const textEl = btn.querySelector('.main-info');
-      if (textEl) textEl.textContent = t('requesting');
-      handleRequestClick().then(() => {
-        if (textEl) textEl.textContent = t('requested');
-      });
+      openDialogForPage();
     });
   } else if (isUnconfigured) {
     btn.href = '#';
@@ -353,7 +349,7 @@ export const tryInjectTraktRow = (response: CheckMediaResponse): void => {
   if (requestLink) {
     requestLink.addEventListener('click', (e) => {
       e.preventDefault();
-      handleRequestClick();
+      openDialogForPage();
     });
   }
 

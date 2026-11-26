@@ -1,6 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { injectStatusIndicator } from './fallback.js';
+import { openMediaDialog } from './media-dialog.js';
 import type { CheckMediaResponse } from '../types/messages.js';
+import type { DetectedMedia } from '../types/index.js';
+
+vi.mock('./media-dialog.js', async () => {
+  const actual = await vi.importActual('./media-dialog.js');
+  return { ...actual, openMediaDialog: vi.fn() };
+});
+
+const movie: DetectedMedia = { type: 'movie', title: 'Glass Onion', year: 2022 };
 
 describe('fallback injection', () => {
   beforeEach(() => {
@@ -20,7 +29,7 @@ describe('fallback injection', () => {
       },
     };
 
-    injectStatusIndicator(response, 'movie');
+    injectStatusIndicator(response, movie);
 
     const indicator = document.getElementById('media-connector-indicator');
     expect(indicator).to.exist;
@@ -35,10 +44,29 @@ describe('fallback injection', () => {
       },
     };
 
-    injectStatusIndicator(response, 'movie');
+    injectStatusIndicator(response, movie);
 
     const indicator = document.getElementById('media-connector-indicator');
     expect(indicator?.textContent).to.contain('Request with Jellyseerr');
+  });
+
+  it('opens the media dialog for the page title from the request indicator', () => {
+    const response: CheckMediaResponse = {
+      type: 'CHECK_MEDIA_RESPONSE',
+      payload: { status: 'unavailable' },
+    };
+    const series: DetectedMedia = { type: 'series', title: 'Stranger Things', tmdbId: '66732' };
+
+    injectStatusIndicator(response, series);
+    document.getElementById('media-connector-indicator')?.click();
+
+    expect(openMediaDialog).toHaveBeenCalledWith({
+      title: 'Stranger Things',
+      year: undefined,
+      imdbId: undefined,
+      tmdbId: '66732',
+      mediaType: 'series',
+    });
   });
 
   it('injects unconfigured indicator', () => {
@@ -49,7 +77,7 @@ describe('fallback injection', () => {
       },
     };
 
-    injectStatusIndicator(response, 'movie');
+    injectStatusIndicator(response, movie);
 
     const indicator = document.getElementById('media-connector-indicator');
     expect(indicator?.textContent).to.contain('Configure Extension');
@@ -65,7 +93,7 @@ describe('fallback injection', () => {
       },
     };
 
-    injectStatusIndicator(response, 'movie');
+    injectStatusIndicator(response, movie);
 
     const indicator = document.getElementById('media-connector-indicator');
     expect(indicator?.textContent).to.contain('Only Season 1');
@@ -81,7 +109,7 @@ describe('fallback injection', () => {
       payload: { status: 'available', itemUrl: 'url' },
     };
 
-    injectStatusIndicator(response, 'movie');
+    injectStatusIndicator(response, movie);
     const indicator = document.getElementById('media-connector-indicator');
     const closeBtn = Array.from(indicator!.querySelectorAll('span')).find(
       (s) => s.textContent === '×',

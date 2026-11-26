@@ -9,8 +9,13 @@ vi.mock('../common-ui.js', async () => {
     ...actual,
     sendMessage: vi.fn(),
     injectSkeletonKeyframes: vi.fn(),
-    requestFromSidebar: vi.fn(),
   };
+});
+
+// Mock the dialog, keep its target helpers
+vi.mock('../media-dialog.js', async () => {
+  const actual = await vi.importActual('../media-dialog.js');
+  return { ...actual, openMediaDialog: vi.fn() };
 });
 
 // Mock the index module
@@ -39,7 +44,8 @@ const mockObserve = vi.fn();
   (this as unknown as { disconnect: typeof mockDisconnect }).disconnect = mockDisconnect;
 });
 
-import { sendMessage, requestFromSidebar } from '../common-ui.js';
+import { sendMessage } from '../common-ui.js';
+import { openMediaDialog } from '../media-dialog.js';
 import { tryDetectMedia } from '../index.js';
 import { getJustWatchPageType } from '../content-script-helpers.js';
 
@@ -199,7 +205,7 @@ describe('JustWatch Injection', () => {
       expect(badges[0].textContent).to.contain('Play on Jellyfin (partial)');
     });
 
-    it('handles request click in search row', async () => {
+    it('opens the media dialog from Request in a search row', async () => {
       vi.mocked(getJustWatchPageType).mockReturnValue('search');
       vi.mocked(sendMessage).mockImplementation(async (msg: unknown) => {
         const m = msg as { type: string };
@@ -207,7 +213,9 @@ describe('JustWatch Injection', () => {
         if (m.type === 'SEARCH_JELLYSEERR') {
           return {
             payload: {
-              results: [{ id: 3, title: 'None', status: 'not_requested' }],
+              results: [
+                { id: 3, title: 'None', year: 2020, mediaType: 'tv', status: 'not_requested' },
+              ],
               jellyseerrEnabled: true,
               serverType: 'emby',
             },
@@ -215,7 +223,6 @@ describe('JustWatch Injection', () => {
         }
         return undefined;
       });
-      vi.mocked(requestFromSidebar).mockResolvedValue(true);
 
       initJustWatchSPA();
       await vi.runAllTimersAsync();
@@ -223,35 +230,16 @@ describe('JustWatch Injection', () => {
       const btn = document.querySelector('.media-connector-jw-search-badge') as HTMLElement;
       expect(btn.textContent).to.contain('Request on Emby');
 
-      await btn.click();
-      expect(requestFromSidebar).toHaveBeenCalled();
-      expect(btn.textContent).to.contain('Requested on Emby');
-    });
-
-    it('handles request failure in search row', async () => {
-      vi.mocked(getJustWatchPageType).mockReturnValue('search');
-      vi.mocked(sendMessage).mockImplementation(async (msg: unknown) => {
-        const m = msg as { type: string };
-        if (m.type === 'GET_CONFIG') return { payload: { serverType: 'emby' } };
-        if (m.type === 'SEARCH_JELLYSEERR') {
-          return {
-            payload: {
-              results: [{ id: 3, title: 'None', status: 'not_requested' }],
-              jellyseerrEnabled: true,
-              serverType: 'emby',
-            },
-          };
-        }
-        return undefined;
+      btn.click();
+      expect(openMediaDialog).toHaveBeenCalledWith({
+        title: 'None',
+        year: 2020,
+        tmdbId: '3',
+        mediaType: 'series',
       });
-      vi.mocked(requestFromSidebar).mockResolvedValue(false);
-
-      initJustWatchSPA();
-      await vi.runAllTimersAsync();
-
-      const btn = document.querySelector('.media-connector-jw-search-badge') as HTMLElement;
-      await btn.click();
-      expect(btn.textContent).to.contain('Failed');
+      expect(sendMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'REQUEST_MEDIA' }),
+      );
     });
 
     it('handles pending status in search row', async () => {
@@ -278,7 +266,7 @@ describe('JustWatch Injection', () => {
       const btn = document.querySelector('.media-connector-jw-search-badge') as HTMLElement;
       expect(btn.textContent).to.contain('Request Pending');
       btn.click();
-      expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({ type: 'OPEN_TAB' }));
+      expect(openMediaDialog).toHaveBeenCalledWith(expect.objectContaining({ tmdbId: '4' }));
     });
 
     it('handles detectDetail early exit if already detecting', async () => {
