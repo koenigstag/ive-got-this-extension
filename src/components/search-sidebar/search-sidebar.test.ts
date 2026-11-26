@@ -42,6 +42,30 @@ describe('search-sidebar', () => {
     expect(infoRow?.textContent).to.contain('Missing Item');
   });
 
+  it('offers the title the server has and a Prowlarr search when Jellyseerr finds nothing', async () => {
+    const response: SearchJellyseerrResponse = {
+      type: 'SEARCH_JELLYSEERR_RESPONSE',
+      payload: {
+        results: [],
+        jellyseerrEnabled: true,
+        serverType: 'jellyfin',
+        serverMatch: { status: 'partial', itemUrl: 'http://jellyfin.home/web/#/details?id=1' },
+        prowlarrUrl: 'http://prowlarr.lab.home',
+      },
+    };
+    const el = await fixture<SearchSidebar>(
+      html`<search-sidebar .response="${response}" queryTitle="Холод"></search-sidebar>`,
+    );
+
+    const infoRow = el.shadowRoot?.querySelector('.info-row');
+    expect(infoRow?.textContent).to.contain('Available (Partial) on Jellyfin');
+    expect(infoRow?.textContent).to.contain('Found by the title "Холод"');
+    expect(infoRow?.querySelector('.play-on-server')?.textContent).to.contain('Play on Jellyfin');
+    const find = infoRow?.querySelector('.find-release');
+    expect(find?.textContent).to.contain('Find a release');
+    expect(find?.getAttribute('title')).to.equal('Search Prowlarr for "Холод"');
+  });
+
   it('renders unconfigured message', async () => {
     const el = await fixture<SearchSidebar>(
       html`<search-sidebar .response="${mockSearchResponses.unconfigured}"></search-sidebar>`,

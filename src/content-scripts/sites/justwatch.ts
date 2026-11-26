@@ -4,6 +4,7 @@ import {
   JELLYFIN_SVG,
   sendMessage,
   createInfoRow,
+  createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
   requestFromSidebar,
@@ -80,7 +81,7 @@ export const initJustWatchSPA = (): void => {
         return;
       }
 
-      injectJustWatchCard(response, title);
+      injectJustWatchCard(response, title, mediaType);
       resumeObserver();
       detailInjected = true;
     } finally {
@@ -244,7 +245,11 @@ const removeJustWatchSkeleton = (): void => {
   document.getElementById(JUSTWATCH_SKELETON_ID)?.remove();
 };
 
-const injectJustWatchCard = (response: SearchJellyseerrResponse, queryTitle: string): void => {
+const injectJustWatchCard = (
+  response: SearchJellyseerrResponse,
+  queryTitle: string,
+  mediaType?: 'movie' | 'tv',
+): void => {
   if (document.getElementById(JUSTWATCH_CARD_ID)) return;
 
   const { results, jellyseerrEnabled, serverType, jellyseerrUrl, error } = response.payload;
@@ -301,7 +306,7 @@ const injectJustWatchCard = (response: SearchJellyseerrResponse, queryTitle: str
   }
 
   if (results.length === 0) {
-    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
+    card.appendChild(createNotFoundRows(response, queryTitle, mediaType));
     appendCardToJustWatchPage(card);
     return;
   }

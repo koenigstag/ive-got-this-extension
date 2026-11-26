@@ -2,6 +2,7 @@ import {
   COMBINED_SVG,
   sendMessage,
   createInfoRow,
+  createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
 } from '../common-ui.js';
@@ -63,7 +64,7 @@ export const initImdb = async (): Promise<void> => {
   }
 
   console.log('[Media Connector] Jellyseerr response:', response);
-  injectImdbCard(response, title);
+  injectImdbCard(response, title, mediaType);
 };
 
 /**
@@ -120,7 +121,11 @@ const removeImdbSkeleton = (): void => {
   document.getElementById(IMDB_SKELETON_ID)?.remove();
 };
 
-const injectImdbCard = (response: SearchJellyseerrResponse, queryTitle: string): void => {
+const injectImdbCard = (
+  response: SearchJellyseerrResponse,
+  queryTitle: string,
+  mediaType?: 'movie' | 'tv',
+): void => {
   if (document.getElementById(IMDB_CARD_ID)) return;
 
   const { results, jellyseerrEnabled, serverType, jellyseerrUrl, error } = response.payload;
@@ -177,7 +182,7 @@ const injectImdbCard = (response: SearchJellyseerrResponse, queryTitle: string):
   }
 
   if (results.length === 0) {
-    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
+    card.appendChild(createNotFoundRows(response, queryTitle, mediaType));
     appendCardToImdbPage(card);
     return;
   }

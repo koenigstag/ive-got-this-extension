@@ -145,3 +145,23 @@ export const buildServerItemUrl = (
     Match.orElse(() => `${serverUrl}/web/index.html#!/item?id=${itemId}${serverIdParam}`),
   );
 };
+
+const titleWords = (text: string): string[] =>
+  text
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+
+/**
+ * Whether a media server item's name stands for the searched title: every
+ * word of the title appears in it as a whole word. The server's name search
+ * is loose ("Холод" also finds "Холодное сердце"), while a title downloaded
+ * by hand often keeps the release's name ("Холод.2026.WEB-DL.1080p").
+ */
+export const nameCoversTitle = (itemName: string, title: string): boolean => {
+  const wanted = titleWords(title);
+  if (wanted.length === 0) return false;
+  const have = new Set(titleWords(itemName));
+  return wanted.every((word) => have.has(word));
+};

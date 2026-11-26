@@ -7,6 +7,7 @@ import {
   withTimeoutFailEffect,
   buildDetectedMediaFromMessage,
   buildServerItemUrl,
+  nameCoversTitle,
 } from './service-worker-helpers.js';
 
 describe('mapMediaStatus', () => {
@@ -207,5 +208,24 @@ describe('buildServerItemUrl', () => {
   it('builds Jellyfin URL with server ID', () => {
     const url = buildServerItemUrl('jellyfin', 'https://jf.example.com', 'xyz789', 'server-2');
     expect(url).toBe('https://jf.example.com/web/#/details?id=xyz789&serverId=server-2');
+  });
+});
+
+describe('nameCoversTitle', () => {
+  it.each([
+    ['Холод', 'Холод'],
+    ['Холод.2026.WEB-DL.1080p', 'Холод'],
+    ['Ёлки 2', 'елки 2'],
+    ['The Apothecary Diaries', 'the apothecary diaries'],
+  ])('%s is %s', (itemName, title) => {
+    expect(nameCoversTitle(itemName, title)).toBe(true);
+  });
+
+  it.each([
+    ['Холодное сердце', 'Холод'],
+    ['Химера', 'Холод'],
+    ['Anything', ''],
+  ])('%s is not %s', (itemName, title) => {
+    expect(nameCoversTitle(itemName, title)).toBe(false);
   });
 });

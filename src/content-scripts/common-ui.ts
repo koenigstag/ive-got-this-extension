@@ -1,7 +1,11 @@
 import { Option, Effect } from 'effect';
 import { detectMediaOption } from './detect-media.js';
 import { buildCheckPayloadEffect } from './content-script-helpers.js';
-import type { RequestMediaResponse, JellyseerrResultItem } from '../types/messages.js';
+import type {
+  RequestMediaResponse,
+  JellyseerrResultItem,
+  SearchJellyseerrResponse,
+} from '../types/messages.js';
 import { t } from '../i18n/index.js';
 
 /**
@@ -385,6 +389,79 @@ export const createInfoRow = (
     <div style="font-size:12px;color:#a89cc0;">${description}</div>
   `;
   return row;
+};
+
+/**
+ * Prowlarr's search page for a title. Prowlarr's web app runs the search from
+ * the URL (`query`, `categories`); Newznab categories 2000 = movies, 5000 = TV.
+ */
+export const buildProwlarrSearchUrl = (
+  prowlarrUrl: string,
+  query: string,
+  mediaType?: 'movie' | 'tv',
+): string => {
+  const categories = mediaType === 'movie' ? '2000' : mediaType === 'tv' ? '5000' : '2000,5000';
+  return `${prowlarrUrl.replace(/\/+$/, '')}/search?query=${encodeURIComponent(query)}&categories=${categories}`;
+};
+
+/**
+ * What a card shows when Jellyseerr found nothing, typically a title TMDB
+ * doesn't have, so it can't be requested:
+ * - the title on the media server, when the service worker found it there by
+ *   name (downloaded by hand), with a Play button; otherwise "No results";
+ * - with Prowlarr set up, "Find a release", which opens Prowlarr's search for
+ *   the title in a new tab (the download then goes to Prowlarr's client).
+ */
+export const createNotFoundRows = (
+  response: SearchJellyseerrResponse,
+  queryTitle: string,
+  mediaType?: 'movie' | 'tv',
+): HTMLDivElement => {
+  const { serverMatch, prowlarrUrl, serverType } = response.payload;
+  const serverLabel = serverType === 'jellyfin' ? 'Jellyfin' : 'Emby';
+  const container = document.createElement('div');
+  container.className = 'media-connector-not-found';
+
+  container.appendChild(
+    serverMatch
+      ? createInfoRow(
+          '✓',
+          t(
+            serverMatch.status === 'partial' ? 'availableOnServerPartial' : 'availableOnServer',
+            serverLabel,
+          ),
+          t('foundOnServerByName', queryTitle),
+        )
+      : createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)),
+  );
+
+  const buttons = document.createElement('div');
+  Object.assign(buttons.style, { display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '2px' });
+
+  if (serverMatch) {
+    const isJellyfin = serverLabel === 'Jellyfin';
+    const play = createActionButton(
+      `▶ ${t('playOnServer', serverLabel)}`,
+      isJellyfin ? '#00A4DC' : '#4CAF50',
+      isJellyfin ? '#0088B8' : '#388E3C',
+    );
+    play.dataset.action = 'play-on-server';
+    play.addEventListener('click', () => window.open(serverMatch.itemUrl, '_blank'));
+    buttons.appendChild(play);
+  }
+
+  if (prowlarrUrl) {
+    const find = createActionButton(`🔎 ${t('findRelease')}`, '#5c6370', '#474c56');
+    find.dataset.action = 'find-release';
+    find.title = t('findReleaseHint', queryTitle);
+    find.addEventListener('click', () => {
+      void openInNewTab(buildProwlarrSearchUrl(prowlarrUrl, queryTitle, mediaType));
+    });
+    buttons.appendChild(find);
+  }
+
+  if (buttons.childElementCount > 0) container.appendChild(buttons);
+  return container;
 };
 
 /**

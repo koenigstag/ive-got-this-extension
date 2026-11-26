@@ -3,6 +3,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { property } from 'lit/decorators.js';
 import {
   COMBINED_SVG,
+  buildProwlarrSearchUrl,
   buildStatusBadge,
   openExtensionSettings,
   openInNewTab,
@@ -101,6 +102,32 @@ export class SearchSidebar extends LitElement {
 
     .info-row .open-settings:hover {
       background: #5e1f9b;
+    }
+
+    .not-found-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .not-found-actions button {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      cursor: pointer;
+    }
+
+    .not-found-actions .find-release {
+      background: #5c6370;
+    }
+
+    .not-found-actions .find-release:hover {
+      background: #474c56;
     }
 
     .result-row {
@@ -222,9 +249,60 @@ export class SearchSidebar extends LitElement {
         : error
           ? this._renderInfoRow('⚠️', t('connectionError'), error)
           : results.length === 0
-            ? this._renderInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', this.queryTitle))
+            ? this._renderNotFound(serverLabel)
             : results.map((item) => this._renderResultRow(item, serverLabel))}
     `;
+  }
+
+  /**
+   * Nothing in Jellyseerr (often a title TMDB doesn't have): the title on the
+   * server when the worker found it there by name, and "Find a release" in
+   * Prowlarr when it is set up. Same as the cards' createNotFoundRows.
+   */
+  private _renderNotFound(serverLabel: string) {
+    const { serverMatch, prowlarrUrl } = this.response!.payload;
+    const isJellyfin = serverLabel === 'Jellyfin';
+    const actions =
+      serverMatch || prowlarrUrl
+        ? html`<div class="not-found-actions">
+            ${serverMatch
+              ? html`<button
+                  class="play-on-server"
+                  style="background: ${isJellyfin ? '#00A4DC' : '#4CAF50'}"
+                  @click="${() => window.open(serverMatch.itemUrl, '_blank')}"
+                >
+                  ▶ ${t('playOnServer', serverLabel)}
+                </button>`
+              : nothing}
+            ${prowlarrUrl
+              ? html`<button
+                  class="find-release"
+                  title="${t('findReleaseHint', this.queryTitle)}"
+                  @click="${() =>
+                    void openInNewTab(buildProwlarrSearchUrl(prowlarrUrl, this.queryTitle))}"
+                >
+                  🔎 ${t('findRelease')}
+                </button>`
+              : nothing}
+          </div>`
+        : undefined;
+
+    return serverMatch
+      ? this._renderInfoRow(
+          '✓',
+          t(
+            serverMatch.status === 'partial' ? 'availableOnServerPartial' : 'availableOnServer',
+            serverLabel,
+          ),
+          t('foundOnServerByName', this.queryTitle),
+          actions,
+        )
+      : this._renderInfoRow(
+          '🔍',
+          t('noResults'),
+          t('notFoundOnJellyseerr', this.queryTitle),
+          actions,
+        );
   }
 
   private _renderInfoRow(emoji: string, title: string, desc: string, action?: unknown) {

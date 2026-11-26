@@ -63,6 +63,43 @@ test.describe('ivi — content script injection', () => {
     await expect(card).toContainText('No results');
   });
 
+  test('without Jellyseerr results: the title on the server and a Prowlarr search', async ({
+    page,
+  }) => {
+    await setupContentScript(page, 'ivi-series.html', {
+      GET_CONFIG: mockResponses.configEmby,
+      SEARCH_JELLYSEERR: {
+        type: 'SEARCH_JELLYSEERR_RESPONSE',
+        payload: {
+          results: [],
+          jellyseerrEnabled: true,
+          serverType: 'jellyfin',
+          serverMatch: { status: 'available', itemUrl: 'http://jellyfin.home/web/#/details?id=1' },
+          prowlarrUrl: 'http://prowlarr.lab.home',
+        },
+      },
+    });
+
+    const card = page.locator(CARD);
+    await expect(card).toContainText('Available on Jellyfin');
+    await expect(card).toContainText('Found by the title "Химера"');
+    await expect(card.locator('[data-action="play-on-server"]')).toBeVisible();
+
+    await card.locator('[data-action="find-release"]').click();
+    const openTabs = await page.evaluate(() =>
+      (
+        window as unknown as { __sentMessages: { type: string; payload?: unknown }[] }
+      ).__sentMessages
+        .filter((m) => m.type === 'OPEN_TAB')
+        .map((m) => m.payload),
+    );
+    expect(openTabs).toEqual([
+      {
+        url: 'http://prowlarr.lab.home/search?query=%D0%A5%D0%B8%D0%BC%D0%B5%D1%80%D0%B0&categories=5000',
+      },
+    ]);
+  });
+
   test('follows in-app navigation to another title', async ({ page }) => {
     await setupContentScript(page, 'ivi-series.html', {
       GET_CONFIG: mockResponses.configEmby,

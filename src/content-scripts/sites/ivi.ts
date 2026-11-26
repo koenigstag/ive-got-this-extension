@@ -2,6 +2,7 @@ import {
   COMBINED_SVG,
   sendMessage,
   createInfoRow,
+  createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
 } from '../common-ui.js';
@@ -55,7 +56,14 @@ export const initIvi = (): void => {
   let lastCheckAt = 0;
   // The last search result, so a card the app's re-render removed comes back
   // without a second request.
-  let shown: { slug: string; title: string; response: SearchJellyseerrResponse } | undefined;
+  let shown:
+    | {
+        slug: string;
+        title: string;
+        mediaType: 'movie' | 'tv';
+        response: SearchJellyseerrResponse;
+      }
+    | undefined;
   // One search per title: a failed one is not retried on every DOM change.
   let searchedSlug: string | undefined;
 
@@ -77,7 +85,8 @@ export const initIvi = (): void => {
     if (!slug || searching || (searchedSlug === slug && !shown)) return;
 
     if (shown?.slug === slug) {
-      if (!document.getElementById(IVI_CARD_ID)) injectIviCard(shown.response, shown.title);
+      if (!document.getElementById(IVI_CARD_ID))
+        injectIviCard(shown.response, shown.title, shown.mediaType);
       return;
     }
 
@@ -119,8 +128,9 @@ export const initIvi = (): void => {
       // The user may have moved on while the search ran.
       if (!response || getIviTitleSlug(window.location.href) !== slug) return;
 
-      shown = { slug, title, response };
-      injectIviCard(response, title);
+      const mediaType = media.type === 'movie' ? 'movie' : 'tv';
+      shown = { slug, title, mediaType, response };
+      injectIviCard(response, title, mediaType);
     } finally {
       searching = false;
       removeIviSkeleton();
@@ -225,7 +235,11 @@ const showIviSkeleton = (serverLabel: string): void => {
   appendToIviPage(wrapForIvi(IVI_SKELETON_ID, card));
 };
 
-export const injectIviCard = (response: SearchJellyseerrResponse, queryTitle: string): void => {
+export const injectIviCard = (
+  response: SearchJellyseerrResponse,
+  queryTitle: string,
+  mediaType?: 'movie' | 'tv',
+): void => {
   if (document.getElementById(IVI_CARD_ID)) return;
 
   const { results, jellyseerrEnabled, serverType, jellyseerrUrl, error } = response.payload;
@@ -242,7 +256,7 @@ export const injectIviCard = (response: SearchJellyseerrResponse, queryTitle: st
   } else if (error) {
     card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
   } else if (results.length === 0) {
-    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
+    card.appendChild(createNotFoundRows(response, queryTitle, mediaType));
   } else {
     results.forEach((item, idx) => {
       const row = buildResultRow(item, serverLabel, jellyseerrUrl);

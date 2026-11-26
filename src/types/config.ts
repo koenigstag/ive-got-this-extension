@@ -44,6 +44,16 @@ export interface UiConfig {
 }
 
 /**
+ * Prowlarr, for titles Jellyseerr can't find (no TMDB entry): a "Find a
+ * release" button opens Prowlarr's search for the title. Only the address is
+ * kept; the search runs in Prowlarr's own page, where the user is signed in.
+ */
+export interface ProwlarrConfig {
+  /** Prowlarr's web address, e.g. http://prowlarr.lab.home; empty = no button. */
+  readonly serverUrl: string;
+}
+
+/**
  * Full extension configuration stored in chrome.storage.
  */
 export interface ExtensionConfig {
@@ -53,6 +63,8 @@ export interface ExtensionConfig {
   readonly jellyseerr: JellyseerrConfig;
   /** UI settings; missing in configs saved before it existed */
   readonly ui?: UiConfig;
+  /** Optional: Prowlarr for titles Jellyseerr can't find. */
+  readonly prowlarr?: ProwlarrConfig;
 }
 
 /**
@@ -73,5 +85,8 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
   },
   ui: {
     language: 'auto',
+  },
+  prowlarr: {
+    serverUrl: '',
   },
 };
