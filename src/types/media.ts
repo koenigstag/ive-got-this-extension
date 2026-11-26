@@ -67,4 +67,5 @@ export type SourceSite =
   | 'google'
   | 'bing'
   | 'justwatch'
+  | 'ivi'
   | 'unknown';

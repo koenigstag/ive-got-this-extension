@@ -70,3 +70,17 @@ export const getJustWatchPageType = (url: string): JustWatchPageType => {
   if (/\/search(\/|$)/.test(path)) return 'search';
   return 'other';
 };
+
+/**
+ * Return the title slug of an ivi.ru / ivi.tv title page, or undefined when
+ * the URL is not a title page.
+ *
+ * Title pages live under `/watch/<slug>` (the slug is a transliterated name or
+ * a numeric id), optionally behind a language prefix (`/en/watch/...`).
+ * Episode, season, trailer and description pages (`/watch/<slug>/...`) belong
+ * to the same title, so they return the same slug.
+ */
+export const getIviTitleSlug = (url: string): string | undefined => {
+  const match = new URL(url).pathname.match(/^\/(?:[a-z]{2}\/)?watch\/([^/]+)/);
+  return match?.[1];
+};

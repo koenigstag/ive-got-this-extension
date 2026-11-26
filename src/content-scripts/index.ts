@@ -3,6 +3,7 @@ import { sendMessage, handleRequestClick, tryDetectMedia, buildPayload } from '.
 import { initTrakt } from './sites/trakt.js';
 import { initImdb } from './sites/imdb.js';
 import { initJustWatchSPA } from './sites/justwatch.js';
+import { initIvi } from './sites/ivi.js';
 import { initSearchEngineSidebar } from './sites/search-engine.js';
 import { injectStatusIndicator } from './fallback.js';
 import type { CheckMediaResponse } from '../types/messages.js';
@@ -35,6 +36,11 @@ const init = async (): Promise<void> => {
 
   if (site === 'justwatch') {
     initJustWatchSPA();
+    return;
+  }
+
+  if (site === 'ivi') {
+    initIvi();
     return;
   }
 
