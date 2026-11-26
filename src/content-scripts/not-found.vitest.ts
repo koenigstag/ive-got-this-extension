@@ -76,6 +76,7 @@ describe('createNotFoundRows', () => {
 
     const find = rows.querySelector<HTMLButtonElement>('[data-action="find-release"]')!;
     expect(find.textContent).toContain('Find a release');
+    expect(find.querySelector('svg[viewBox="0 0 1024 1024"]')).not.toBeNull(); // Prowlarr's logo
     find.click();
     expect(sendMessage).toHaveBeenCalledWith(
       {

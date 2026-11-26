@@ -25,7 +25,8 @@ describe('search-sidebar', () => {
     expect(firstTitle?.textContent).to.contain('The Matrix');
 
     const availableBtn = rows?.[0].querySelector('button');
-    expect(availableBtn?.textContent?.trim()).to.equal('▶ Emby');
+    expect(availableBtn?.textContent?.trim()).to.equal('Emby');
+    expect(availableBtn?.querySelector('svg')).to.exist; // the server's logo, not an arrow
   });
 
   it('renders no results message', async () => {
@@ -63,6 +64,7 @@ describe('search-sidebar', () => {
     expect(infoRow?.querySelector('.play-on-server')?.textContent).to.contain('Play on Jellyfin');
     const find = infoRow?.querySelector('.find-release');
     expect(find?.textContent).to.contain('Find a release');
+    expect(find?.querySelector('svg[viewBox="0 0 1024 1024"]')).to.exist; // Prowlarr's logo
     expect(find?.getAttribute('title')).to.equal('Search Prowlarr for "Холод"');
   });
 
@@ -298,7 +300,7 @@ describe('search-sidebar in Russian', () => {
     const rows = el.shadowRoot?.querySelectorAll('.result-row');
     expect(rows?.[0].querySelector('.type-label')?.textContent).to.equal('Фильм');
     expect(rows?.[0].textContent).to.contain('✓ В библиотеке');
-    expect(rows?.[0].querySelector('button')?.textContent?.trim()).to.equal('▶ Emby');
+    expect(rows?.[0].querySelector('button')?.textContent?.trim()).to.equal('Emby');
     expect(rows?.[2].querySelector('button')?.textContent?.trim()).to.equal('＋ Запросить…');
   });
 });

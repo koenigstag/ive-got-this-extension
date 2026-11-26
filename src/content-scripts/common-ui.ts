@@ -4,6 +4,7 @@ import { buildCheckPayloadEffect } from './content-script-helpers.js';
 import type { JellyseerrResultItem, SearchJellyseerrResponse } from '../types/messages.js';
 import { t } from '../i18n/index.js';
 import { dialogTargetFromResult, openMediaDialog } from './media-dialog.js';
+import { prowlarrSvg } from '../assets/prowlarr-icon.svg.js';
 
 /**
  * Detect media from the current page, returning `undefined` when nothing is found.
@@ -110,6 +111,37 @@ export const COMBINED_SVG = `<svg width="48" height="48" viewBox="0 0 512 512" f
 </svg>`;
 
 /**
+ * The server's logo in one colour, for the buttons that open a title on the
+ * server: white, as the button text, because the full-colour logos melt into
+ * the blue (Jellyfin) and green (Emby) buttons. Emby's play mark is cut out in
+ * the button's colour. Decorative: the button text names the server.
+ */
+export const serverButtonLogo = (serverLabel: string, background: string, size = 14): string => {
+  const svg =
+    serverLabel === 'Jellyfin'
+      ? JELLYFIN_SVG.replace(/<defs>[\s\S]*?<\/defs>/, '').replace(
+          /fill="url\(#jellyfin-gradient-cs\)"/g,
+          'fill="currentColor"',
+        )
+      : EMBY_SVG.replace(/fill="#52b54b"/g, 'fill="currentColor"').replace(
+          /fill="#fff"/g,
+          `fill="${background}"`,
+        );
+  return svg
+    .replace(/ aria-label="[^"]*"/, '')
+    .replace(
+      'width="48" height="48"',
+      `width="${size}" height="${size}" aria-hidden="true" style="flex-shrink:0"`,
+    );
+};
+
+/** Put an icon before a button's text, lined up with it. */
+const withLeadingIcon = (button: HTMLButtonElement, icon: string): void => {
+  Object.assign(button.style, { display: 'inline-flex', alignItems: 'center', gap: '6px' });
+  button.insertAdjacentHTML('afterbegin', icon);
+};
+
+/**
  * Create a styled action button.
  */
 export const createActionButton = (
@@ -177,13 +209,21 @@ export const buildStatusBadge = (status: JellyseerrResultItem['status']): string
 export const resultAction = (
   status: JellyseerrResultItem['status'],
   serverLabel: string,
-): { readonly text: string; readonly background: string; readonly hover: string } => {
+): {
+  readonly text: string;
+  readonly background: string;
+  readonly hover: string;
+  /** The server's logo, drawn before the text on a title that is on the server. */
+  readonly icon?: string;
+} => {
   if (status === 'available' || status === 'partial') {
     const isJellyfin = serverLabel === 'Jellyfin';
+    const background = isJellyfin ? '#00A4DC' : '#4CAF50';
     return {
-      text: `▶ ${status === 'partial' ? t('serverPartial', serverLabel) : serverLabel}`,
-      background: isJellyfin ? '#00A4DC' : '#4CAF50',
+      text: status === 'partial' ? t('serverPartial', serverLabel) : serverLabel,
+      background,
       hover: isJellyfin ? '#0088B8' : '#388E3C',
+      icon: serverButtonLogo(serverLabel, background),
     };
   }
   if (status === 'pending' || status === 'processing') {
@@ -256,6 +296,7 @@ export const buildResultRow = (item: JellyseerrResultItem, serverLabel: string):
      the Jellyseerr state, the request and the seasons. */
   const action = resultAction(item.status, serverLabel);
   const btn = createActionButton(action.text, action.background, action.hover);
+  if (action.icon) withLeadingIcon(btn, action.icon);
   btn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
   btnContainer.appendChild(btn);
 
@@ -332,18 +373,22 @@ export const createNotFoundRows = (
 
   if (serverMatch) {
     const isJellyfin = serverLabel === 'Jellyfin';
+    const background = isJellyfin ? '#00A4DC' : '#4CAF50';
     const play = createActionButton(
-      `▶ ${t('playOnServer', serverLabel)}`,
-      isJellyfin ? '#00A4DC' : '#4CAF50',
+      t('playOnServer', serverLabel),
+      background,
       isJellyfin ? '#0088B8' : '#388E3C',
     );
+    withLeadingIcon(play, serverButtonLogo(serverLabel, background));
     play.dataset.action = 'play-on-server';
     play.addEventListener('click', () => window.open(serverMatch.itemUrl, '_blank'));
     buttons.appendChild(play);
   }
 
   if (prowlarrUrl) {
-    const find = createActionButton(`🔎 ${t('findRelease')}`, '#5c6370', '#474c56');
+    const find = createActionButton(t('findRelease'), '#5c6370', '#474c56');
+    Object.assign(find.style, { display: 'inline-flex', alignItems: 'center', gap: '6px' });
+    find.insertAdjacentHTML('afterbegin', prowlarrSvg(14));
     find.dataset.action = 'find-release';
     find.title = t('findReleaseHint', queryTitle);
     find.addEventListener('click', () => {

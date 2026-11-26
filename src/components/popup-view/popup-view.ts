@@ -10,6 +10,8 @@ import { probeServerUrlEffect, clearResolvedUrlCacheEffect } from '../../utils/u
 import { embyIcon } from '../../assets/emby-icon.svg.js';
 import { jellyfinIcon } from '../../assets/jellyfin-icon.svg.js';
 import { jellyseerrIcon } from '../../assets/jellyseerr-icon.svg.js';
+import { prowlarrSvg } from '../../assets/prowlarr-icon.svg.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { combinedIcon } from '../../assets/combined-icon.svg.js';
 import type { ServerType, ExtensionConfig, UiLanguage } from '../../types/index.js';
 import { setLanguage, t } from '../../i18n/index.js';
@@ -453,7 +455,7 @@ export class PopupView extends ComponentMixin(LitElement) {
     return html`
       <div class="section">
         <div class="section-header">
-          <div class="section-title">🔎 Prowlarr</div>
+          <div class="section-title">${unsafeHTML(prowlarrSvg(16))} Prowlarr</div>
         </div>
         <div class="form-group">
           <label for="prowlarr-url">${t('popupProwlarrUrl')}</label>

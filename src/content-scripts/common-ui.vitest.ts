@@ -187,7 +187,9 @@ describe('common-ui', () => {
 
       const buttons = row.querySelectorAll('button');
       expect(buttons).toHaveLength(1);
-      expect(buttons[0].textContent).to.equal('▶ Emby');
+      expect(buttons[0].textContent).to.equal('Emby');
+      // The server's logo instead of an arrow, decorative (the text names the server).
+      expect(buttons[0].querySelector('svg[aria-hidden="true"]')).not.toBeNull();
 
       vi.spyOn(window, 'open').mockImplementation(() => null);
       buttons[0].click();
@@ -203,7 +205,7 @@ describe('common-ui', () => {
 
     it('labels a partly available item with the server', () => {
       const row = buildResultRow({ ...mockItem, status: 'partial' }, 'Jellyfin');
-      expect(row.querySelector('button')?.textContent).to.equal('▶ Jellyfin (Partial)');
+      expect(row.querySelector('button')?.textContent).to.equal('Jellyfin (Partial)');
     });
 
     it('opens the media dialog from a pending item', () => {
