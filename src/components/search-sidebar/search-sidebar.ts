@@ -8,6 +8,7 @@ import {
   openExtensionSettings,
   openInNewTab,
   resultAction,
+  serverButtonLogo,
 } from '../../content-scripts/common-ui.js';
 import { dialogTargetFromResult, openMediaDialog } from '../../content-scripts/media-dialog.js';
 import type { SearchJellyseerrResponse, JellyseerrResultItem } from '../../types/messages.js';
@@ -276,7 +277,8 @@ export class SearchSidebar extends LitElement {
                   style="background: ${isJellyfin ? '#00A4DC' : '#4CAF50'}"
                   @click="${() => window.open(serverMatch.itemUrl, '_blank')}"
                 >
-                  ▶ ${t('playOnServer', serverLabel)}
+                  ${unsafeHTML(serverButtonLogo(serverLabel, isJellyfin ? '#00A4DC' : '#4CAF50'))}
+                  ${t('playOnServer', serverLabel)}
                 </button>`
               : nothing}
             ${prowlarrUrl
@@ -355,9 +357,9 @@ export class SearchSidebar extends LitElement {
           ((e.currentTarget as HTMLButtonElement).style.background = action.hover)}"
         @mouseleave="${(e: Event) =>
           ((e.currentTarget as HTMLButtonElement).style.background = action.background)}"
-        style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: ${action.background}; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
+        style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: none; border-radius: 6px; background: ${action.background}; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
       >
-        ${action.text}
+        ${action.icon ? unsafeHTML(action.icon) : nothing}${action.text}
       </button>
     `;
   }

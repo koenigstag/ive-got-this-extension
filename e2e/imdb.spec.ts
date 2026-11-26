@@ -85,6 +85,6 @@ test.describe('IMDb — content script injection', () => {
     });
 
     const card = page.locator('#media-connector-imdb-card');
-    await expect(card.getByRole('button')).toHaveText('▶ Emby');
+    await expect(card.getByRole('button')).toHaveText('Emby');
   });
 });

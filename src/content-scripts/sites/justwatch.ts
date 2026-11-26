@@ -7,6 +7,7 @@ import {
   createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
+  serverButtonLogo,
 } from '../common-ui.js';
 import { tryDetectMedia } from '../index.js';
 import { dialogTargetFromResult, openMediaDialog } from '../media-dialog.js';
@@ -466,7 +467,8 @@ const processJustWatchSearchRow = async (
       boxShadow: `0 2px 8px ${serverBg}55`,
     });
     const label = item.status === 'partial' ? t('serverPartial', serverLabel) : serverLabel;
-    btn.innerHTML = `${iconHtml}<span>▶ ${label}</span>`;
+    // On the server's own colour the full-colour logo melts in: the white one instead.
+    btn.innerHTML = `${serverButtonLogo(serverLabel, serverBg, 18)}<span>${label}</span>`;
     btn.addEventListener('mouseenter', () => {
       btn.style.background = serverBgHover;
       btn.style.boxShadow = `0 4px 14px ${serverBg}77`;

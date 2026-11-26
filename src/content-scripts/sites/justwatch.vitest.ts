@@ -203,7 +203,7 @@ describe('JustWatch Injection', () => {
       const badges = document.querySelectorAll('.media-connector-jw-search-badge');
       expect(badges.length).to.be.greaterThan(0);
       // The row's one button names the server and opens the dialog, not the server
-      expect(badges[0].textContent).to.contain('▶ Jellyfin (Partial)');
+      expect(badges[0].textContent).to.contain('Jellyfin (Partial)');
       expect(badges[0].getAttribute('href')).toBeNull();
       (badges[0] as HTMLElement).click();
       expect(openMediaDialog).toHaveBeenCalledWith(expect.objectContaining({ tmdbId: '1' }));

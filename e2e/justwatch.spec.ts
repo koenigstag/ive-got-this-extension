@@ -79,7 +79,7 @@ test.describe('JustWatch — content script injection', () => {
       // At least one badge should name the server or offer a request
       const firstBadge = page.locator('.media-connector-jw-search-badge').first();
       const text = await firstBadge.textContent();
-      expect(text).toMatch(/▶ Emby|Request/);
+      expect(text).toMatch(/Emby|Request/);
     });
   });
 });

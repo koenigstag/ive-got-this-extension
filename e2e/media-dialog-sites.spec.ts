@@ -58,7 +58,10 @@ test.describe('Media dialog from the cards on other sites', () => {
       GET_MEDIA_DETAILS: mockResponses.mediaDetailsSeries,
     });
 
-    await page.locator('#media-connector-sidebar').getByRole('button', { name: '▶ Emby' }).click();
+    await page
+      .locator('#media-connector-sidebar')
+      .getByRole('button', { name: 'Emby', exact: true })
+      .click();
 
     const dialog = dialogOf(page);
     await expect(dialog).toBeVisible();
