@@ -19,7 +19,7 @@ As you browse titles on IMDb, Trakt, Netflix, Amazon Prime Video, JustWatch, or 
 - **Real-time Detection:** Automatically identifies movies, series, seasons, and episodes on supported platforms.
 - **Deep Integration:** Injects native-feeling UI elements (badges, sidebars, and buttons) into IMDb, Trakt, JustWatch, Netflix, Amazon, and ivi.
 - **Search Engine Enhancement:** Adds a dedicated media status sidebar to Google, Bing and Yandex (yandex.ru, ya.ru, yandex.com) search results.
-- **Requests from a dialog:** Every Jellyseerr button (Request, Pending, Manage in Jellyseerr) on the sites and in the search sidebar opens a dialog with the title's state on your server and in Jellyseerr, its requests, and for a series the episodes per season; request a movie or the seasons you pick.
+- **One button, one dialog:** Each title, on the sites and in the search sidebar, gets one button (the server name when you have it, otherwise Request) that opens a dialog with the title's state on your server and in Jellyseerr, its requests, and for a series the episodes per season. From there you play it on the server or request a movie or the seasons you pick.
 - **Smart Deep Linking:** Jump directly from a discovery site to the playback page on your own Emby or Jellyfin instance.
 - **Mobile Optimized:** Full support for Microsoft Edge on Android and iOS with touch-friendly controls.
 

@@ -19,7 +19,7 @@ test.describe('Trakt — content script injection', () => {
 
     const legacyBtn = page.locator('#media-connector-trakt-action-btn');
     await expect(legacyBtn).toBeVisible();
-    await expect(legacyBtn).toContainText('Play on Emby');
+    await expect(legacyBtn).toContainText('Emby');
   });
 
   test('WTW item is prepended to the list container', async ({ page }) => {
@@ -95,7 +95,7 @@ test.describe('Trakt — content script injection', () => {
 
     const legacyBtn = page.locator('#media-connector-trakt-action-btn');
     await expect(legacyBtn).toBeVisible();
-    await expect(legacyBtn).toContainText('Play on Emby');
+    await expect(legacyBtn).toContainText('Emby');
     await expect(legacyBtn).not.toContainText('Request');
 
     const wtwItem = page.locator('#media-connector-wtw-item');

@@ -344,7 +344,7 @@ describe('Trakt Injection', () => {
   });
 
   describe('tryInjectTraktLegacyButton', () => {
-    it('inserts Play button before Check In button', () => {
+    it('inserts the server button before Check In, opening the dialog', () => {
       const response: CheckMediaResponse = {
         type: 'CHECK_MEDIA_RESPONSE',
         payload: {
@@ -358,10 +358,17 @@ describe('Trakt Injection', () => {
 
       const btn = document.getElementById('media-connector-trakt-action-btn');
       expect(btn).to.exist;
-      expect(btn?.textContent).to.contain('Play on Emby');
+      expect(btn?.textContent).to.contain('Emby');
+      expect(btn?.getAttribute('href')).toBe('#');
 
       const checkinBtn = document.querySelector('.btn-checkin');
       expect(btn?.nextElementSibling).to.equal(checkinBtn);
+
+      vi.mocked(tryDetectMedia).mockReturnValue({ type: 'movie', title: 'The Matrix', year: 1999 });
+      btn?.click();
+      expect(openMediaDialog).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'The Matrix', mediaType: 'movie' }),
+      );
     });
 
     it('inserts Request button when unavailable', () => {
@@ -376,14 +383,14 @@ describe('Trakt Injection', () => {
       tryInjectTraktLegacyButton(response);
 
       const btn = document.getElementById('media-connector-trakt-action-btn');
-      expect(btn?.textContent).to.contain('Request on Jellyfin');
+      expect(btn?.textContent).to.contain('Request…');
 
       vi.mocked(tryDetectMedia).mockReturnValue({ type: 'movie', title: 'The Matrix', year: 1999 });
       btn?.click();
       expect(openMediaDialog).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'The Matrix', year: 1999, mediaType: 'movie' }),
       );
-      expect(btn?.textContent).to.contain('Request on Jellyfin');
+      expect(btn?.textContent).to.contain('Request…');
     });
 
     it('inserts Unconfigured button when unconfigured', () => {

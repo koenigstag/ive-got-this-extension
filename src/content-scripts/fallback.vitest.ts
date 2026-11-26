@@ -98,9 +98,11 @@ describe('fallback injection', () => {
     const indicator = document.getElementById('media-connector-indicator');
     expect(indicator?.textContent).to.contain('Only Season 1');
 
+    // Every state opens the dialog, which has the server link
     vi.spyOn(window, 'open').mockImplementation(() => null);
     indicator?.click();
-    expect(window.open).toHaveBeenCalledWith('https://emby.test/123', '_blank');
+    expect(openMediaDialog).toHaveBeenCalledWith(expect.objectContaining({ title: 'Glass Onion' }));
+    expect(window.open).not.toHaveBeenCalled();
   });
 
   it('removes itself when close is clicked', async () => {

@@ -25,7 +25,7 @@ describe('search-sidebar', () => {
     expect(firstTitle?.textContent).to.contain('The Matrix');
 
     const availableBtn = rows?.[0].querySelector('button');
-    expect(availableBtn?.textContent?.trim()).to.contain('Play on Emby');
+    expect(availableBtn?.textContent?.trim()).to.equal('▶ Emby');
   });
 
   it('renders no results message', async () => {
@@ -110,16 +110,15 @@ describe('search-sidebar', () => {
     expect(pendingBtn?.textContent?.includes('Pending')).to.be.true;
   });
 
-  it('renders Manage in Jellyseerr button for available items', async () => {
+  it('gives every result one button', async () => {
     const el = await fixture<SearchSidebar>(
       html`<search-sidebar .response="${mockSearchResponses.multiple}"></search-sidebar>`,
     );
 
-    const rows = el.shadowRoot?.querySelectorAll('.result-row');
-    const manageBtn = Array.from(rows?.[0].querySelectorAll('button') || []).find((b) =>
-      b.textContent?.includes('Manage'),
+    const rows = Array.from(el.shadowRoot?.querySelectorAll('.result-row') ?? []);
+    expect(rows.map((row) => row.querySelectorAll('button').length)).to.deep.equal(
+      rows.map(() => 1),
     );
-    expect(manageBtn).to.exist;
   });
 
   it('handles request button click', async () => {
@@ -189,16 +188,21 @@ describe('search-sidebar', () => {
       ]);
     });
 
-    it('opens the media dialog from Manage in Jellyseerr on an available series', async () => {
+    it('opens the media dialog, not the server, from an available series', async () => {
       const el = await fixture<SearchSidebar>(
         html`<search-sidebar .response="${mockSearchResponses.multiple}"></search-sidebar>`,
       );
       const tvRow = el.shadowRoot?.querySelectorAll('.result-row')[1];
-      const manageBtn = Array.from(tvRow?.querySelectorAll('button') ?? []).find((b) =>
-        b.textContent?.includes('Manage'),
-      ) as HTMLButtonElement;
+      const openWindow = window.open;
+      let opened = false;
+      window.open = () => {
+        opened = true;
+        return null;
+      };
 
-      manageBtn.click();
+      (tvRow?.querySelector('button') as HTMLButtonElement).click();
+      window.open = openWindow;
+      expect(opened).to.equal(false);
 
       const tv = mockSearchResponses.multiple.payload.results[1];
       expect(sent).to.deep.equal([
@@ -270,7 +274,7 @@ describe('search-sidebar in Russian', () => {
     const rows = el.shadowRoot?.querySelectorAll('.result-row');
     expect(rows?.[0].querySelector('.type-label')?.textContent).to.equal('Фильм');
     expect(rows?.[0].textContent).to.contain('✓ В библиотеке');
-    expect(rows?.[0].querySelector('button')?.textContent).to.contain('▶ Смотреть в Emby');
-    expect(rows?.[2].querySelector('button')?.textContent).to.contain('＋ Запросить');
+    expect(rows?.[0].querySelector('button')?.textContent?.trim()).to.equal('▶ Emby');
+    expect(rows?.[2].querySelector('button')?.textContent?.trim()).to.equal('＋ Запросить…');
   });
 });

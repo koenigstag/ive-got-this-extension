@@ -171,13 +171,31 @@ export const buildStatusBadge = (status: JellyseerrResultItem['status']): string
 };
 
 /**
- * Build a single result row with poster, title, status badge, and request button.
+ * The one button of a Jellyseerr result, by the title's state: the server name on a title
+ * that is there, "Already requested", or "Request…". Each opens the media dialog.
  */
-export const buildResultRow = (
-  item: JellyseerrResultItem,
+export const resultAction = (
+  status: JellyseerrResultItem['status'],
   serverLabel: string,
-  jellyseerrUrl?: string,
-): HTMLDivElement => {
+): { readonly text: string; readonly background: string; readonly hover: string } => {
+  if (status === 'available' || status === 'partial') {
+    const isJellyfin = serverLabel === 'Jellyfin';
+    return {
+      text: `▶ ${status === 'partial' ? t('serverPartial', serverLabel) : serverLabel}`,
+      background: isJellyfin ? '#00A4DC' : '#4CAF50',
+      hover: isJellyfin ? '#0088B8' : '#388E3C',
+    };
+  }
+  if (status === 'pending' || status === 'processing') {
+    return { text: `⏳ ${t('requestPending')}`, background: '#616161', hover: '#424242' };
+  }
+  return { text: `＋ ${t('requestMore')}`, background: '#7B2FBE', hover: '#5E1F9B' };
+};
+
+/**
+ * Build a single result row with poster, title, status badge, and its one button.
+ */
+export const buildResultRow = (item: JellyseerrResultItem, serverLabel: string): HTMLDivElement => {
   const row = document.createElement('div');
   Object.assign(row.style, {
     display: 'flex',
@@ -234,41 +252,12 @@ export const buildResultRow = (
     gap: '6px',
   });
 
-  /* Server-type-based button colors: Emby = green, Jellyfin = blue/purple */
-  const isJellyfin = serverLabel === 'Jellyfin';
-  const serverBtnBg = isJellyfin ? '#00A4DC' : '#4CAF50';
-  const serverBtnHover = isJellyfin ? '#0088B8' : '#388E3C';
-
-  if (item.status === 'available' || item.status === 'partial') {
-    /* "Play on [server]" → opens the media server web UI (deep link). */
-    if (item.serverItemUrl) {
-      const serverBtn = createActionButton(
-        `▶ ${t('playOnServer', serverLabel)}`,
-        serverBtnBg,
-        serverBtnHover,
-      );
-      serverBtn.addEventListener('click', () => {
-        window.open(item.serverItemUrl, '_blank');
-      });
-      btnContainer.appendChild(serverBtn);
-    }
-    /* "Manage in Jellyseerr" → the media dialog, which links to Jellyseerr */
-    if (jellyseerrUrl) {
-      const manageBtn = createActionButton(t('manageInJellyseerr'), '#7B2FBE', '#5E1F9B');
-      manageBtn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
-      btnContainer.appendChild(manageBtn);
-    }
-  } else if (item.status === 'pending' || item.status === 'processing') {
-    const pendingBtn = createActionButton(`⏳ ${t('requestPending')}`, '#616161', '#424242');
-    pendingBtn.style.cursor = 'pointer';
-    pendingBtn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
-    btnContainer.appendChild(pendingBtn);
-  } else {
-    /* not_requested / unknown: the dialog asks which seasons, then requests */
-    const reqBtn = createActionButton(`＋ ${t('request')}`, '#7B2FBE', '#5E1F9B');
-    reqBtn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
-    btnContainer.appendChild(reqBtn);
-  }
+  /* One button, as on Trakt: it opens the media dialog, which has the server link,
+     the Jellyseerr state, the request and the seasons. */
+  const action = resultAction(item.status, serverLabel);
+  const btn = createActionButton(action.text, action.background, action.hover);
+  btn.addEventListener('click', () => openMediaDialog(dialogTargetFromResult(item)));
+  btnContainer.appendChild(btn);
 
   info.appendChild(btnContainer);
   row.appendChild(info);

@@ -202,7 +202,11 @@ describe('JustWatch Injection', () => {
 
       const badges = document.querySelectorAll('.media-connector-jw-search-badge');
       expect(badges.length).to.be.greaterThan(0);
-      expect(badges[0].textContent).to.contain('Play on Jellyfin (partial)');
+      // The row's one button names the server and opens the dialog, not the server
+      expect(badges[0].textContent).to.contain('▶ Jellyfin (Partial)');
+      expect(badges[0].getAttribute('href')).toBeNull();
+      (badges[0] as HTMLElement).click();
+      expect(openMediaDialog).toHaveBeenCalledWith(expect.objectContaining({ tmdbId: '1' }));
     });
 
     it('opens the media dialog from Request in a search row', async () => {
@@ -228,7 +232,7 @@ describe('JustWatch Injection', () => {
       await vi.runAllTimersAsync();
 
       const btn = document.querySelector('.media-connector-jw-search-badge') as HTMLElement;
-      expect(btn.textContent).to.contain('Request on Emby');
+      expect(btn.textContent).to.contain('Request…');
 
       btn.click();
       expect(openMediaDialog).toHaveBeenCalledWith({

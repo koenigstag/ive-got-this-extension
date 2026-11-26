@@ -76,10 +76,10 @@ test.describe('JustWatch — content script injection', () => {
 
       await page.waitForTimeout(2000);
 
-      // At least one badge should mention "Play on" or "Request"
+      // At least one badge should name the server or offer a request
       const firstBadge = page.locator('.media-connector-jw-search-badge').first();
       const text = await firstBadge.textContent();
-      expect(text).toMatch(/Play on|Request/);
+      expect(text).toMatch(/▶ Emby|Request/);
     });
   });
 });

@@ -181,38 +181,33 @@ describe('common-ui', () => {
       serverItemUrl: 'https://emby.test/item/123',
     };
 
-    it('renders an available item with a Play button', () => {
-      const row = buildResultRow(mockItem, 'Emby', 'https://jsr.test');
+    it('gives an available item one button, with the server name, that opens the dialog', () => {
+      const row = buildResultRow(mockItem, 'Emby');
       expect(row.textContent).to.contain('The Matrix (1999)');
-      expect(row.textContent).to.contain('▶ Play on Emby');
 
-      const playBtn = Array.from(row.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('Play'),
-      );
+      const buttons = row.querySelectorAll('button');
+      expect(buttons).toHaveLength(1);
+      expect(buttons[0].textContent).to.equal('▶ Emby');
+
       vi.spyOn(window, 'open').mockImplementation(() => null);
-      playBtn?.click();
-      expect(window.open).toHaveBeenCalledWith(mockItem.serverItemUrl, '_blank');
-    });
-
-    it('opens the media dialog from the Manage in Jellyseerr button', () => {
-      const row = buildResultRow(mockItem, 'Emby', 'https://jsr.test');
-      const manageBtn = Array.from(row.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('Manage'),
-      );
-      expect(manageBtn).to.exist;
-
-      manageBtn?.click();
+      buttons[0].click();
       expect(openMediaDialog).toHaveBeenCalledWith({
         title: 'The Matrix',
         year: 1999,
         tmdbId: '123',
         mediaType: 'movie',
       });
+      expect(window.open).not.toHaveBeenCalled();
       expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
     });
 
+    it('labels a partly available item with the server', () => {
+      const row = buildResultRow({ ...mockItem, status: 'partial' }, 'Jellyfin');
+      expect(row.querySelector('button')?.textContent).to.equal('▶ Jellyfin (Partial)');
+    });
+
     it('opens the media dialog from a pending item', () => {
-      const row = buildResultRow({ ...mockItem, status: 'pending' }, 'Emby', 'https://jsr.test');
+      const row = buildResultRow({ ...mockItem, status: 'pending' }, 'Emby');
       expect(row.textContent).to.contain('⏳ Request Pending');
 
       row.querySelector('button')?.click();
@@ -220,13 +215,9 @@ describe('common-ui', () => {
     });
 
     it('opens the media dialog from Request instead of requesting at once', () => {
-      const row = buildResultRow(
-        { ...mockItem, mediaType: 'tv', status: 'not_requested' },
-        'Emby',
-        'https://jsr.test',
-      );
+      const row = buildResultRow({ ...mockItem, mediaType: 'tv', status: 'not_requested' }, 'Emby');
       const reqBtn = row.querySelector('button');
-      expect(reqBtn?.textContent).to.contain('＋ Request');
+      expect(reqBtn?.textContent).to.equal('＋ Request…');
 
       reqBtn?.click();
       // A series goes to the dialog, where the seasons to request are chosen.
@@ -240,11 +231,7 @@ describe('common-ui', () => {
     });
 
     it('renders a poster image if posterUrl is provided', () => {
-      const row = buildResultRow(
-        { ...mockItem, posterUrl: 'https://image.test/p.jpg' },
-        'Emby',
-        'https://jsr.test',
-      );
+      const row = buildResultRow({ ...mockItem, posterUrl: 'https://image.test/p.jpg' }, 'Emby');
       const img = row.querySelector('img');
       expect(img).to.exist;
       expect(img?.src).to.equal('https://image.test/p.jpg');

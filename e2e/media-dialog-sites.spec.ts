@@ -49,7 +49,7 @@ test.describe('Media dialog from the cards on other sites', () => {
     await expect(page.locator('#media-connector-dialog-host')).toHaveCount(0);
   });
 
-  test('Yandex sidebar: Manage in Jellyseerr opens the dialog with the seasons', async ({
+  test('Yandex sidebar: the button of an available series opens the dialog with the seasons', async ({
     page,
   }) => {
     await setupContentScript(page, 'yandex-series.html', {
@@ -58,10 +58,7 @@ test.describe('Media dialog from the cards on other sites', () => {
       GET_MEDIA_DETAILS: mockResponses.mediaDetailsSeries,
     });
 
-    await page
-      .locator('#media-connector-sidebar')
-      .getByRole('button', { name: /Manage in Jellyseerr/ })
-      .click();
+    await page.locator('#media-connector-sidebar').getByRole('button', { name: '▶ Emby' }).click();
 
     const dialog = dialogOf(page);
     await expect(dialog).toBeVisible();
