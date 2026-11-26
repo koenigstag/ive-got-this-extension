@@ -41,9 +41,14 @@ export const JellyseerrConfigSchema = Schema.Struct({
   apiKey: Schema.String,
 });
 
+export const UiConfigSchema = Schema.Struct({
+  language: Schema.Literal('auto', 'en', 'ru'),
+});
+
 export const ExtensionConfigSchema: Schema.Schema<ExtensionConfig> = Schema.Struct({
   server: ServerConfigSchema,
   jellyseerr: JellyseerrConfigSchema,
+  ui: Schema.optional(UiConfigSchema),
 });
 
 // ---------------------------------------------------------------------------

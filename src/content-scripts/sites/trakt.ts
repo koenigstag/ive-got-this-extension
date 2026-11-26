@@ -1,5 +1,6 @@
 import { EMBY_SVG, JELLYFIN_SVG, sendMessage, handleRequestClick } from '../common-ui.js';
 import { tryDetectMedia, buildPayload } from '../index.js';
+import { t } from '../../i18n/index.js';
 import type { CheckMediaResponse } from '../../types/messages.js';
 
 /**
@@ -164,11 +165,11 @@ export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
           <div class="trakt-streaming-service-logo" style="${logoContainerStyle}">
             ${logoSvg}
           </div>
-          <p style="${labelStyle}">${labelText}${response.payload.status === 'partial' ? ' (Partial)' : ''}</p>
+          <p style="${labelStyle}">${response.payload.status === 'partial' ? t('serverPartial', labelText) : labelText}</p>
         </div>
       </a>`;
   } else if (canRequest) {
-    labelText = 'Request';
+    labelText = t('request');
     item.innerHTML = `
       <div class="where-to-watch-item-content" style="${contentStyle} cursor: pointer;">
         <div class="trakt-streaming-service-logo" style="${logoContainerStyle}">
@@ -180,7 +181,7 @@ export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
       handleRequestClick();
     });
   } else if (isUnconfigured) {
-    labelText = `Set up ${serverLabel}`;
+    labelText = t('setUpServer', serverLabel);
     item.innerHTML = `
       <div class="where-to-watch-item-content" style="${contentStyle} cursor: pointer; opacity: 0.6;">
         <div class="trakt-streaming-service-logo" style="${logoContainerStyle}">
@@ -268,23 +269,23 @@ export const tryInjectTraktLegacyButton = (response: CheckMediaResponse): void =
     btn.innerHTML = `
       <div class="fa fa-fw" style="display:inline-flex;align-items:center;justify-content:center;width:1.28571429em;">${iconHtml}</div>
       <div class="text">
-        <div class="main-info">Play on ${serverLabel}</div>
-        ${response.payload.status === 'partial' ? '<div class="under-info">Partial</div>' : ''}
+        <div class="main-info">${t('playOnServer', serverLabel)}</div>
+        ${response.payload.status === 'partial' ? `<div class="under-info">${t('statusPartial')}</div>` : ''}
       </div>`;
   } else if (canRequest) {
     btn.href = '#';
     btn.innerHTML = `
       <div class="fa fa-fw" style="display:inline-flex;align-items:center;justify-content:center;width:1.28571429em;">${iconHtml}</div>
       <div class="text">
-        <div class="main-info">Request on ${serverLabel}</div>
+        <div class="main-info">${t('requestOnServer', serverLabel)}</div>
       </div>`;
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       const textEl = btn.querySelector('.main-info');
-      if (textEl) textEl.textContent = 'Requesting…';
+      if (textEl) textEl.textContent = t('requesting');
       handleRequestClick().then(() => {
-        if (textEl) textEl.textContent = 'Requested!';
+        if (textEl) textEl.textContent = t('requested');
       });
     });
   } else if (isUnconfigured) {
@@ -293,7 +294,7 @@ export const tryInjectTraktLegacyButton = (response: CheckMediaResponse): void =
     btn.innerHTML = `
       <div class="fa fa-fw" style="display:inline-flex;align-items:center;justify-content:center;width:1.28571429em;">${iconHtml}</div>
       <div class="text">
-        <div class="main-info">Set up ${serverLabel}</div>
+        <div class="main-info">${t('setUpServer', serverLabel)}</div>
       </div>`;
   } else {
     return;
@@ -330,10 +331,12 @@ export const tryInjectTraktRow = (response: CheckMediaResponse): void => {
   let content = `<div style="display:flex;align-items:center;">${iconHtml}</div>`;
 
   if (status === 'available' || status === 'partial') {
-    const label = status === 'partial' ? `${serverLabel} (Partial)` : serverLabel;
-    content += `<div style="font-weight: 600;">Available on <a href="${response.payload.itemUrl}" target="_blank" style="color: #ed1c24;">${label}</a></div>`;
+    const label = status === 'partial' ? t('serverPartial', serverLabel) : serverLabel;
+    const link = `<a href="${response.payload.itemUrl}" target="_blank" style="color: #ed1c24;">${label}</a>`;
+    content += `<div style="font-weight: 600;">${t('availableOnServer', link)}</div>`;
   } else if (status === 'unavailable') {
-    content += `<div style="font-weight: 600;">Request with <a href="#" class="media-connector-request" style="color: #ed1c24;">Jellyseerr</a></div>`;
+    const link = `<a href="#" class="media-connector-request" style="color: #ed1c24;">Jellyseerr</a>`;
+    content += `<div style="font-weight: 600;">${t('requestWith', link)}</div>`;
   } else {
     return;
   }

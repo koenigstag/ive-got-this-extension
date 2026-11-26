@@ -11,6 +11,9 @@ import { html, fixture, expect } from '@open-wc/testing';
 };
 
 import { PopupView } from './popup-view.js';
+import { DEFAULT_CONFIG } from '../../types/index.js';
+import type { ExtensionConfig } from '../../types/index.js';
+import { setLanguage } from '../../i18n/index.js';
 
 // Ensure registration
 import './popup-view.js';
@@ -379,5 +382,53 @@ describe('popup-view', () => {
     jellyfinBtn.click();
     await el.updateComplete;
     expect(el.serverType).to.equal('jellyfin');
+  });
+});
+
+describe('popup-view language', () => {
+  // The popup reads its settings from localStorage here: the chrome mock has no storage.
+  const STORAGE_KEY = 'mediaConnectorConfig';
+
+  afterEach(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setLanguage('en');
+  });
+
+  const settle = async (el: PopupView) => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await el.updateComplete;
+  };
+
+  it('switches to Russian from the language select and keeps the choice in the config', async () => {
+    const el = await fixture<PopupView>(html`<popup-view></popup-view>`);
+    await settle(el);
+
+    const select = el.shadowRoot?.querySelector('#ui-language') as HTMLSelectElement;
+    expect(select.value).to.equal('auto');
+    select.value = 'ru';
+    select.dispatchEvent(new Event('change'));
+    await el.updateComplete;
+
+    expect(el.shadowRoot?.querySelector('.header p')?.textContent).to.equal(
+      'Настройте подключение к серверу',
+    );
+    expect(el.shadowRoot?.querySelector('.btn-success')?.textContent?.trim()).to.equal(
+      'Сохранить настройки',
+    );
+    const built = (el as unknown as { _buildConfig: () => ExtensionConfig })._buildConfig();
+    expect(built.ui?.language).to.equal('ru');
+  });
+
+  it('opens in the saved language', async () => {
+    const saved: ExtensionConfig = { ...DEFAULT_CONFIG, ui: { language: 'ru' } };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+
+    const el = await fixture<PopupView>(html`<popup-view></popup-view>`);
+    await settle(el);
+
+    expect((el.shadowRoot?.querySelector('#ui-language') as HTMLSelectElement).value).to.equal(
+      'ru',
+    );
+    expect(el.shadowRoot?.querySelector('label[for="api-key"]')?.textContent).to.equal('API-ключ');
   });
 });

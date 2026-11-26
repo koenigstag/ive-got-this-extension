@@ -6,6 +6,7 @@ import {
   injectSkeletonKeyframes,
 } from '../common-ui.js';
 import { tryDetectMedia } from '../index.js';
+import { t } from '../../i18n/index.js';
 import type {
   SearchJellyseerrResponse,
   GetConfigResponse,
@@ -97,7 +98,7 @@ const showImdbSkeleton = (serverLabel: string): void => {
       <div style="width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">${iconHtml}</div>
       <div>
         <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">Powered by Jellyseerr &middot; ${serverLabel}</div>
+        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('poweredBy', serverLabel)}</div>
       </div>
     </div>
     <!-- skeleton content -->
@@ -156,33 +157,27 @@ const injectImdbCard = (response: SearchJellyseerrResponse, queryTitle: string):
     <div style="width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">${iconHtml}</div>
     <div>
       <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-      <div style="font-size:11px;color:#a89cc0;margin-top:2px;">Powered by Jellyseerr · ${serverLabel}</div>
+      <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('poweredBy', serverLabel)}</div>
     </div>
   `;
   card.appendChild(header);
 
   if (!jellyseerrEnabled) {
     card.appendChild(
-      createInfoRow(
-        '⚙️',
-        'Jellyseerr not configured',
-        'Open the extension popup to set your Jellyseerr URL and API key.',
-      ),
+      createInfoRow('⚙️', t('jellyseerrNotConfigured'), t('jellyseerrNotConfiguredPopup')),
     );
     appendCardToImdbPage(card);
     return;
   }
 
   if (error) {
-    card.appendChild(createInfoRow('⚠️', 'Connection error', error));
+    card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
     appendCardToImdbPage(card);
     return;
   }
 
   if (results.length === 0) {
-    card.appendChild(
-      createInfoRow('🔍', 'No results', `"${queryTitle}" was not found on Jellyseerr.`),
-    );
+    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
     appendCardToImdbPage(card);
     return;
   }
@@ -254,20 +249,23 @@ export const tryInjectImdbCard = (response: CheckMediaResponse): void => {
       <div style="width:32px;height:32px;flex-shrink:0;">${COMBINED_SVG.replace(/width="48" height="48"/, 'width="32" height="32"')}</div>
       <div>
         <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${serverLabel} Status</div>
+        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('serverStatus', serverLabel)}</div>
       </div>
     </div>
   `;
 
   let contentHtml = '';
   if (status === 'available' || status === 'partial') {
-    const label = status === 'partial' ? 'Available (Partial)' : 'Available';
+    const availableText =
+      status === 'partial'
+        ? t('availableOnServerPartial', serverLabel)
+        : t('availableOnServer', serverLabel);
     contentHtml = `
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:24px;">✅</div>
         <div>
-          <div style="font-weight:600;">${label} on ${serverLabel}</div>
-          <a href="${itemUrl}" target="_blank" style="color:#d0bcff;text-decoration:underline;font-size:13px;">Play now</a>
+          <div style="font-weight:600;">${availableText}</div>
+          <a href="${itemUrl}" target="_blank" style="color:#d0bcff;text-decoration:underline;font-size:13px;">${t('playNow')}</a>
         </div>
       </div>
     `;
@@ -276,8 +274,8 @@ export const tryInjectImdbCard = (response: CheckMediaResponse): void => {
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:24px;">🚀</div>
         <div>
-          <div style="font-weight:600;">Not on ${serverLabel} yet</div>
-          <div style="font-size:13px;color:#a89cc0;">You can request this via Jellyseerr.</div>
+          <div style="font-weight:600;">${t('notOnServerYet', serverLabel)}</div>
+          <div style="font-size:13px;color:#a89cc0;">${t('requestYouCan')}</div>
         </div>
       </div>
     `;

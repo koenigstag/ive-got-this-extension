@@ -1,4 +1,11 @@
-export type { ServerType, ServerConfig, JellyseerrConfig, ExtensionConfig } from './config.js';
+export type {
+  ServerType,
+  ServerConfig,
+  JellyseerrConfig,
+  ExtensionConfig,
+  UiConfig,
+  UiLanguage,
+} from './config.js';
 export { DEFAULT_CONFIG } from './config.js';
 export type {
   MediaType,

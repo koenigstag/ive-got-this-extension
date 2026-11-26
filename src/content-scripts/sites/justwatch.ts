@@ -11,6 +11,7 @@ import {
 import { tryDetectMedia } from '../index.js';
 import { getJustWatchPageType } from '../content-script-helpers.js';
 import type { SearchJellyseerrResponse, GetConfigResponse } from '../../types/messages.js';
+import { t } from '../../i18n/index.js';
 
 const JUSTWATCH_CARD_ID = 'media-connector-justwatch-card';
 const JUSTWATCH_SKELETON_ID = 'media-connector-justwatch-skeleton';
@@ -222,7 +223,7 @@ const showJustWatchSkeleton = (serverLabel: string): void => {
       <div style="width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">${iconHtml}</div>
       <div>
         <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">Powered by Jellyseerr &middot; ${serverLabel}</div>
+        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('poweredBy', serverLabel)}</div>
       </div>
     </div>
     <div style="display:flex;gap:12px;align-items:flex-start;">
@@ -280,33 +281,27 @@ const injectJustWatchCard = (response: SearchJellyseerrResponse, queryTitle: str
     <div style="width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">${iconHtml}</div>
     <div>
       <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-      <div style="font-size:11px;color:#a89cc0;margin-top:2px;">Powered by Jellyseerr · ${serverLabel}</div>
+      <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('poweredBy', serverLabel)}</div>
     </div>
   `;
   card.appendChild(header);
 
   if (!jellyseerrEnabled) {
     card.appendChild(
-      createInfoRow(
-        '⚙️',
-        'Jellyseerr not configured',
-        'Open the extension popup to set your Jellyseerr URL and API key.',
-      ),
+      createInfoRow('⚙️', t('jellyseerrNotConfigured'), t('jellyseerrNotConfiguredPopup')),
     );
     appendCardToJustWatchPage(card);
     return;
   }
 
   if (error) {
-    card.appendChild(createInfoRow('⚠️', 'Connection error', error));
+    card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
     appendCardToJustWatchPage(card);
     return;
   }
 
   if (results.length === 0) {
-    card.appendChild(
-      createInfoRow('🔍', 'No results', `"${queryTitle}" was not found on Jellyseerr.`),
-    );
+    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
     appendCardToJustWatchPage(card);
     return;
   }
@@ -465,8 +460,11 @@ const processJustWatchSearchRow = async (
       color: '#fff',
       boxShadow: `0 2px 8px ${serverBg}55`,
     });
-    const statusNote = item.status === 'partial' ? ' (partial)' : '';
-    btn.innerHTML = `${iconHtml}<span>▶ Play on ${serverLabel}${statusNote}</span>`;
+    const playText =
+      item.status === 'partial'
+        ? t('playOnServerPartial', serverLabel)
+        : t('playOnServer', serverLabel);
+    btn.innerHTML = `${iconHtml}<span>▶ ${playText}</span>`;
     if (item.serverItemUrl) {
       btn.href = item.serverItemUrl;
       btn.target = '_blank';
@@ -489,7 +487,7 @@ const processJustWatchSearchRow = async (
       color: '#ccc',
       cursor: jellyseerrUrl ? 'pointer' : 'default',
     });
-    btn.innerHTML = `${iconHtml}<span>⏳ Request Pending</span>`;
+    btn.innerHTML = `${iconHtml}<span>⏳ ${t('requestPending')}</span>`;
     if (jellyseerrUrl) {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -506,7 +504,7 @@ const processJustWatchSearchRow = async (
       color: '#d0bcff',
       border: '1px solid rgba(123, 47, 190, 0.5)',
     });
-    btn.innerHTML = `${iconHtml}<span>＋ Request on ${serverLabel}</span>`;
+    btn.innerHTML = `${iconHtml}<span>＋ ${t('requestOnServer', serverLabel)}</span>`;
     btn.addEventListener('mouseenter', () => {
       btn.style.background = 'rgba(123, 47, 190, 0.35)';
       btn.style.transform = 'translateY(-1px)';
@@ -519,22 +517,22 @@ const processJustWatchSearchRow = async (
       e.preventDefault();
       e.stopPropagation();
       const label = btn.querySelector('span:last-child');
-      if (label) label.textContent = 'Requesting…';
+      if (label) label.textContent = t('requesting');
       btn.style.opacity = '0.6';
       btn.style.pointerEvents = 'none';
       const ok = await requestFromSidebar(item);
       if (ok) {
-        if (label) label.textContent = `✓ Requested on ${serverLabel}!`;
+        if (label) label.textContent = `✓ ${t('requestedOnServer', serverLabel)}`;
         btn.style.background = '#4CAF50';
         btn.style.color = '#fff';
         btn.style.border = '1px solid #4CAF50';
         btn.style.opacity = '1';
       } else {
-        if (label) label.textContent = '✗ Failed — click to retry';
+        if (label) label.textContent = `✗ ${t('requestFailedRetry')}`;
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'auto';
         setTimeout(() => {
-          if (label) label.textContent = `＋ Request on ${serverLabel}`;
+          if (label) label.textContent = `＋ ${t('requestOnServer', serverLabel)}`;
         }, 3000);
       }
     });
@@ -575,20 +573,23 @@ export const tryInjectJustWatchCard = (
       <div style="width:32px;height:32px;flex-shrink:0;">${COMBINED_SVG.replace(/width="48" height="48"/, 'width="32" height="32"')}</div>
       <div>
         <div style="font-weight:700;font-size:15px;color:#d0bcff;">I've got this!</div>
-        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${serverLabel} Status</div>
+        <div style="font-size:11px;color:#a89cc0;margin-top:2px;">${t('serverStatus', serverLabel)}</div>
       </div>
     </div>
   `;
 
   let contentHtml = '';
   if (status === 'available' || status === 'partial') {
-    const label = status === 'partial' ? 'Available (Partial)' : 'Available';
+    const availableText =
+      status === 'partial'
+        ? t('availableOnServerPartial', serverLabel)
+        : t('availableOnServer', serverLabel);
     contentHtml = `
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:24px;">✅</div>
         <div>
-          <div style="font-weight:600;">${label} on ${serverLabel}</div>
-          <a href="${itemUrl}" target="_blank" style="color:#d0bcff;text-decoration:underline;font-size:13px;">Play now</a>
+          <div style="font-weight:600;">${availableText}</div>
+          <a href="${itemUrl}" target="_blank" style="color:#d0bcff;text-decoration:underline;font-size:13px;">${t('playNow')}</a>
         </div>
       </div>
     `;
@@ -597,8 +598,8 @@ export const tryInjectJustWatchCard = (
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:24px;">🚀</div>
         <div>
-          <div style="font-weight:600;">Not on ${serverLabel} yet</div>
-          <div style="font-size:13px;color:#a89cc0;">Request via Jellyseerr</div>
+          <div style="font-weight:600;">${t('notOnServerYet', serverLabel)}</div>
+          <div style="font-size:13px;color:#a89cc0;">${t('requestViaJellyseerr')}</div>
         </div>
       </div>
     `;

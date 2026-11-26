@@ -9,6 +9,7 @@ import {
   requestFromSidebar,
 } from '../../content-scripts/common-ui.js';
 import type { SearchJellyseerrResponse, JellyseerrResultItem } from '../../types/messages.js';
+import { t } from '../../i18n/index.js';
 
 export class SearchSidebar extends LitElement {
   @property({ type: Object })
@@ -197,12 +198,12 @@ export class SearchSidebar extends LitElement {
         </div>
         <div>
           <div class="header-title">I've got this!</div>
-          <div class="header-subtitle">Powered by Jellyseerr · ${serverLabel}</div>
+          <div class="header-subtitle">${t('poweredBy', serverLabel)}</div>
         </div>
         <button
           class="settings-btn"
-          title="Extension settings"
-          aria-label="Extension settings"
+          title="${t('extensionSettings')}"
+          aria-label="${t('extensionSettings')}"
           @click="${this._openSettings}"
         >
           ⚙︎
@@ -212,20 +213,16 @@ export class SearchSidebar extends LitElement {
       ${!jellyseerrEnabled
         ? this._renderInfoRow(
             '⚙️',
-            'Jellyseerr not configured',
-            'Set your Jellyseerr URL and API key in the extension settings.',
+            t('jellyseerrNotConfigured'),
+            t('jellyseerrNotConfiguredSettings'),
             html`<button class="open-settings" @click="${this._openSettings}">
-              Open settings
+              ${t('openSettings')}
             </button>`,
           )
         : error
-          ? this._renderInfoRow('⚠️', 'Connection error', error)
+          ? this._renderInfoRow('⚠️', t('connectionError'), error)
           : results.length === 0
-            ? this._renderInfoRow(
-                '🔍',
-                'No results',
-                `"${this.queryTitle}" was not found on Jellyseerr.`,
-              )
+            ? this._renderInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', this.queryTitle))
             : results.map((item) => this._renderResultRow(item, serverLabel))}
     `;
   }
@@ -245,7 +242,7 @@ export class SearchSidebar extends LitElement {
   }
 
   private _renderResultRow(item: JellyseerrResultItem, serverLabel: string) {
-    const typeLabel = item.mediaType === 'movie' ? 'Movie' : 'TV Show';
+    const typeLabel = item.mediaType === 'movie' ? t('typeMovie') : t('typeTvShow');
     const yearStr = item.year ? ` (${item.year})` : '';
     const jellyseerrUrl = this.response?.payload.jellyseerrUrl;
 
@@ -277,7 +274,7 @@ export class SearchSidebar extends LitElement {
               @click="${() => window.open(item.serverItemUrl, '_blank')}"
               style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: ${serverBtnBg}; color: #fff; fontSize: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
             >
-              ▶ Play on ${serverLabel}
+              ▶ ${t('playOnServer', serverLabel)}
             </button>`
           : nothing}
         ${jellyseerrUrl
@@ -285,7 +282,7 @@ export class SearchSidebar extends LitElement {
               @click="${() => this._openJellyseerr(jellyseerrUrl, item)}"
               style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: #7B2FBE; color: #fff; fontSize: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
             >
-              Manage in Jellyseerr
+              ${t('manageInJellyseerr')}
             </button>`
           : nothing}
       `;
@@ -299,7 +296,7 @@ export class SearchSidebar extends LitElement {
             ? 'pointer'
             : 'default'}; transition: background 0.15s; line-height: 1.4;"
         >
-          ⏳ Request Pending
+          ⏳ ${t('requestPending')}
         </button>
       `;
     }
@@ -309,7 +306,7 @@ export class SearchSidebar extends LitElement {
         @click="${(e: Event) => this._handleRequest(e, item, serverLabel)}"
         style="display: inline-block; padding: 5px 12px; border: none; border-radius: 6px; background: #7B2FBE; color: #fff; fontSize: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; line-height: 1.4;"
       >
-        ＋ Request
+        ＋ ${t('request')}
       </button>
     `;
   }
@@ -325,16 +322,16 @@ export class SearchSidebar extends LitElement {
   private async _handleRequest(e: Event, item: JellyseerrResultItem, _serverLabel: string) {
     const btn = e.target as HTMLButtonElement;
     const originalText = btn.textContent;
-    btn.textContent = 'Requesting…';
+    btn.textContent = t('requesting');
     btn.style.opacity = '0.7';
     btn.style.pointerEvents = 'none';
 
     const ok = await requestFromSidebar(item);
     if (ok) {
-      btn.textContent = '✓ Requested!';
+      btn.textContent = `✓ ${t('requested')}`;
       btn.style.background = '#4CAF50';
     } else {
-      btn.textContent = '✗ Failed';
+      btn.textContent = `✗ ${t('requestFailed')}`;
       btn.style.background = '#c62828';
       setTimeout(() => {
         btn.textContent = originalText;

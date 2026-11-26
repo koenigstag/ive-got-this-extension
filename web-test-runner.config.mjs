@@ -16,6 +16,7 @@ export default {
   plugins: [
     esbuildPlugin({
       ts: true,
+      json: true,
       tsconfig: './tsconfig.json',
     }),
   ],

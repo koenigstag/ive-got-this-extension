@@ -32,6 +32,18 @@ export interface JellyseerrConfig {
 }
 
 /**
+ * Language of the extension's UI: `auto` follows the browser's language.
+ */
+export type UiLanguage = 'auto' | 'en' | 'ru';
+
+/**
+ * Settings of the extension's own UI.
+ */
+export interface UiConfig {
+  readonly language: UiLanguage;
+}
+
+/**
  * Full extension configuration stored in chrome.storage.
  */
 export interface ExtensionConfig {
@@ -39,6 +51,8 @@ export interface ExtensionConfig {
   readonly server: ServerConfig;
   /** Jellyseerr request settings */
   readonly jellyseerr: JellyseerrConfig;
+  /** UI settings; missing in configs saved before it existed */
+  readonly ui?: UiConfig;
 }
 
 /**
@@ -56,5 +70,8 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
     serverUrl: '',
     localServerUrl: '',
     apiKey: '',
+  },
+  ui: {
+    language: 'auto',
   },
 };

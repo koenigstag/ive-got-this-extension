@@ -2,6 +2,7 @@ import { Option, Effect } from 'effect';
 import { detectMediaOption } from './detect-media.js';
 import { buildCheckPayloadEffect } from './content-script-helpers.js';
 import type { RequestMediaResponse, JellyseerrResultItem } from '../types/messages.js';
+import { t } from '../i18n/index.js';
 
 /**
  * Detect media from the current page, returning `undefined` when nothing is found.
@@ -130,9 +131,9 @@ export const handleRequestClick = async (): Promise<void> => {
   });
 
   if (response?.payload.success) {
-    alert(`Successfully requested "${title}" via Jellyseerr!`);
+    alert(t('alertRequested', title));
   } else {
-    alert(`Failed to request "${title}": ${response?.payload.message || 'Unknown error'}`);
+    alert(t('alertRequestFailed', title, response?.payload.message || t('unknownError')));
   }
 };
 
@@ -206,20 +207,20 @@ export const createActionButton = (
 export const buildStatusBadge = (status: JellyseerrResultItem['status']): string => {
   const map: Record<JellyseerrResultItem['status'], { label: string; bg: string; fg: string }> = {
     available: {
-      label: '✓ Available',
+      label: `✓ ${t('statusAvailable')}`,
       bg: 'rgba(76,175,80,0.15)',
       fg: '#81C784',
     },
-    partial: { label: '◐ Partial', bg: 'rgba(255,152,0,0.15)', fg: '#FFB74D' },
-    pending: { label: '⏳ Pending', bg: 'rgba(97,97,97,0.2)', fg: '#BDBDBD' },
+    partial: { label: `◐ ${t('statusPartial')}`, bg: 'rgba(255,152,0,0.15)', fg: '#FFB74D' },
+    pending: { label: `⏳ ${t('statusPending')}`, bg: 'rgba(97,97,97,0.2)', fg: '#BDBDBD' },
     processing: {
-      label: '⚙ Processing',
+      label: `⚙ ${t('statusProcessing')}`,
       bg: 'rgba(97,97,97,0.2)',
       fg: '#BDBDBD',
     },
-    unknown: { label: '? Unknown', bg: 'rgba(97,97,97,0.2)', fg: '#BDBDBD' },
+    unknown: { label: `? ${t('statusUnknown')}`, bg: 'rgba(97,97,97,0.2)', fg: '#BDBDBD' },
     not_requested: {
-      label: 'Not in library',
+      label: t('statusNotRequested'),
       bg: 'rgba(123,47,190,0.15)',
       fg: '#CE93D8',
     },
@@ -273,7 +274,7 @@ export const buildResultRow = (
     minWidth: '0',
   });
 
-  const typeLabel = item.mediaType === 'movie' ? 'Movie' : 'TV Show';
+  const typeLabel = item.mediaType === 'movie' ? t('typeMovie') : t('typeTvShow');
   const yearStr = item.year ? ` (${item.year})` : '';
 
   info.innerHTML = `
@@ -301,7 +302,11 @@ export const buildResultRow = (
   if (item.status === 'available' || item.status === 'partial') {
     /* "Play on [server]" → opens the media server web UI (deep link). */
     if (item.serverItemUrl) {
-      const serverBtn = createActionButton('▶ Play on ' + serverLabel, serverBtnBg, serverBtnHover);
+      const serverBtn = createActionButton(
+        `▶ ${t('playOnServer', serverLabel)}`,
+        serverBtnBg,
+        serverBtnHover,
+      );
       serverBtn.addEventListener('click', () => {
         window.open(item.serverItemUrl, '_blank');
       });
@@ -310,7 +315,7 @@ export const buildResultRow = (
     /* "Manage in Jellyseerr" → opens via service worker to bypass SameSite cookies */
     if (jellyseerrUrl) {
       const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
-      const manageBtn = createActionButton('Manage in Jellyseerr', '#7B2FBE', '#5E1F9B');
+      const manageBtn = createActionButton(t('manageInJellyseerr'), '#7B2FBE', '#5E1F9B');
       manageBtn.addEventListener('click', () => {
         const url = `${jellyseerrUrl}/${slug}/${item.id}`;
         console.log(`[I've got this!] Opening via service worker: ${url}`);
@@ -319,7 +324,7 @@ export const buildResultRow = (
       btnContainer.appendChild(manageBtn);
     }
   } else if (item.status === 'pending' || item.status === 'processing') {
-    const pendingBtn = createActionButton('⏳ Request Pending', '#616161', '#424242');
+    const pendingBtn = createActionButton(`⏳ ${t('requestPending')}`, '#616161', '#424242');
     if (jellyseerrUrl) {
       const slug = item.mediaType === 'movie' ? 'movie' : 'tv';
       pendingBtn.style.cursor = 'pointer';
@@ -334,20 +339,20 @@ export const buildResultRow = (
     btnContainer.appendChild(pendingBtn);
   } else {
     /* not_requested / unknown */
-    const reqBtn = createActionButton('＋ Request', '#7B2FBE', '#5E1F9B');
+    const reqBtn = createActionButton(`＋ ${t('request')}`, '#7B2FBE', '#5E1F9B');
     reqBtn.addEventListener('click', () => {
-      reqBtn.textContent = 'Requesting…';
+      reqBtn.textContent = t('requesting');
       reqBtn.style.opacity = '0.7';
       reqBtn.style.pointerEvents = 'none';
       requestFromSidebar(item).then((ok) => {
         if (ok) {
-          reqBtn.textContent = '✓ Requested!';
+          reqBtn.textContent = `✓ ${t('requested')}`;
           reqBtn.style.background = '#4CAF50';
         } else {
-          reqBtn.textContent = '✗ Failed';
+          reqBtn.textContent = `✗ ${t('requestFailed')}`;
           reqBtn.style.background = '#c62828';
           setTimeout(() => {
-            reqBtn.textContent = '＋ Request';
+            reqBtn.textContent = `＋ ${t('request')}`;
             reqBtn.style.background = '#7B2FBE';
             reqBtn.style.opacity = '1';
             reqBtn.style.pointerEvents = 'auto';

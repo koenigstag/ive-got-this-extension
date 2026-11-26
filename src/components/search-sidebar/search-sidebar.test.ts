@@ -2,6 +2,7 @@ import { html, fixture, expect } from '@open-wc/testing';
 import { SearchSidebar } from './search-sidebar.js';
 import { mockSearchResponses } from '../../sandbox/mock-data.js';
 import type { SearchJellyseerrResponse } from '../../types/messages.js';
+import { setLanguage } from '../../i18n/index.js';
 
 // Ensure registration
 import './search-sidebar.js';
@@ -217,5 +218,27 @@ describe('search-sidebar', () => {
       btn.click();
       expect(sent).to.deep.equal([{ type: 'OPEN_SETTINGS' }]);
     });
+  });
+});
+
+describe('search-sidebar in Russian', () => {
+  afterEach(() => {
+    setLanguage('en');
+  });
+
+  it('renders the header, badges and buttons in Russian', async () => {
+    setLanguage('ru');
+    const el = await fixture<SearchSidebar>(
+      html`<search-sidebar .response="${mockSearchResponses.multiple}"></search-sidebar>`,
+    );
+
+    expect(el.shadowRoot?.querySelector('.header-subtitle')?.textContent).to.equal(
+      'По данным Jellyseerr · Emby',
+    );
+    const rows = el.shadowRoot?.querySelectorAll('.result-row');
+    expect(rows?.[0].querySelector('.type-label')?.textContent).to.equal('Фильм');
+    expect(rows?.[0].textContent).to.contain('✓ В библиотеке');
+    expect(rows?.[0].querySelector('button')?.textContent).to.contain('▶ Смотреть в Emby');
+    expect(rows?.[2].querySelector('button')?.textContent).to.contain('＋ Запросить');
   });
 });

@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "I've got this!",
-  "description": "Check if movies and TV shows on IMDb, Trakt, Netflix, and more are on your Emby/Jellyfin server. Integrated with Jellyseerr.",
+  "name": "__MSG_extName__",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "version": "0.1.0",
   "permissions": ["storage", "cookies"],
   "optional_permissions": [],

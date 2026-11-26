@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { ComponentMixin } from '../../mixins/component-mixin.js';
 import { mediaStatusBadgeStyles } from './media-status-badge.styles.js';
 import type { MediaAvailability } from '../../types/index.js';
+import { t } from '../../i18n/index.js';
 
 /**
  * A badge component that displays the availability status of media.
@@ -81,14 +82,14 @@ export class MediaStatusBadge extends ComponentMixin(LitElement) {
         href="${this.itemUrl}"
         target="_blank"
         rel="noopener noreferrer"
-        title="Open ${this.mediaTitle} on your server"
+        title="${t('badgeOpenTitleOnServer', this.mediaTitle)}"
       >
         <span class="badge-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
           </svg>
         </span>
-        <span class="badge-text">Available on Server</span>
+        <span class="badge-text">${t('badgeAvailableOnTheServer')}</span>
       </a>
     `;
   }
@@ -108,7 +109,7 @@ export class MediaStatusBadge extends ComponentMixin(LitElement) {
             <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
           </svg>
         </span>
-        <span class="badge-text">${this.details || 'Partially Available'}</span>
+        <span class="badge-text">${this.details || t('badgePartiallyAvailable')}</span>
       </a>
     `;
   }
@@ -119,14 +120,14 @@ export class MediaStatusBadge extends ComponentMixin(LitElement) {
         class="badge badge--unavailable"
         part="badge"
         @click="${this._handleRequest}"
-        title="Request ${this.mediaTitle} via Jellyseerr"
+        title="${t('badgeRequestTitle', this.mediaTitle)}"
       >
         <span class="badge-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
             <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
           </svg>
         </span>
-        <span class="badge-text">Request with Jellyseerr</span>
+        <span class="badge-text">${t('requestWith', 'Jellyseerr')}</span>
       </button>
     `;
   }
@@ -135,7 +136,7 @@ export class MediaStatusBadge extends ComponentMixin(LitElement) {
     return html`
       <div class="badge badge--loading" part="badge">
         <div class="spinner"></div>
-        <span class="badge-text">Checking...</span>
+        <span class="badge-text">${t('badgeChecking')}</span>
       </div>
     `;
   }
@@ -150,7 +151,7 @@ export class MediaStatusBadge extends ComponentMixin(LitElement) {
             />
           </svg>
         </span>
-        <span class="badge-text">Error: ${this.errorMessage || 'Unknown'}</span>
+        <span class="badge-text">${t('badgeError', this.errorMessage || t('statusUnknown'))}</span>
       </div>
     `;
   }
@@ -165,7 +166,7 @@ export class MediaStatusBadge extends ComponentMixin(LitElement) {
             />
           </svg>
         </span>
-        <span class="badge-text">Configure Extension</span>
+        <span class="badge-text">${t('badgeConfigureExtension')}</span>
       </div>
     `;
   }

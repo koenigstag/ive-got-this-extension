@@ -1,0 +1,360 @@
+{
+  "extName": {
+    "message": "I've got this!"
+  },
+  "extDescription": {
+    "message": "Проверяет, есть ли фильмы и сериалы с IMDb, Trakt, Netflix и других сайтов на вашем сервере Emby или Jellyfin. Работает с Jellyseerr."
+  },
+  "poweredBy": {
+    "message": "По данным Jellyseerr · $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "serverStatus": {
+    "message": "Статус в $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "typeMovie": {
+    "message": "Фильм"
+  },
+  "typeTvShow": {
+    "message": "Сериал"
+  },
+  "statusAvailable": {
+    "message": "В библиотеке"
+  },
+  "statusPartial": {
+    "message": "Частично"
+  },
+  "statusPending": {
+    "message": "Ждёт одобрения"
+  },
+  "statusProcessing": {
+    "message": "Скачивается"
+  },
+  "statusUnknown": {
+    "message": "Неизвестно"
+  },
+  "statusNotRequested": {
+    "message": "Нет в библиотеке"
+  },
+  "playOnServer": {
+    "message": "Смотреть в $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "playOnServerPartial": {
+    "message": "Смотреть в $SERVER$ (частично)",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "playNow": {
+    "message": "Смотреть"
+  },
+  "manageInJellyseerr": {
+    "message": "Открыть в Jellyseerr"
+  },
+  "request": {
+    "message": "Запросить"
+  },
+  "requestOnServer": {
+    "message": "Запросить в $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestWith": {
+    "message": "Запросить в $SERVICE$",
+    "placeholders": {
+      "service": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestViaJellyseerr": {
+    "message": "Можно запросить в Jellyseerr"
+  },
+  "requestYouCan": {
+    "message": "Его можно запросить в Jellyseerr."
+  },
+  "requestPending": {
+    "message": "Уже запрошено"
+  },
+  "requesting": {
+    "message": "Отправляю…"
+  },
+  "requested": {
+    "message": "Запрошено!"
+  },
+  "requestedOnServer": {
+    "message": "Запрошено в $SERVER$!",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestFailed": {
+    "message": "Не удалось"
+  },
+  "requestFailedRetry": {
+    "message": "Не удалось — нажмите, чтобы повторить"
+  },
+  "alertRequested": {
+    "message": "Заявка на «$TITLE$» отправлена в Jellyseerr!",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "alertRequestFailed": {
+    "message": "Не удалось запросить «$TITLE$»: $REASON$",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "reason": {
+        "content": "$2"
+      }
+    }
+  },
+  "unknownError": {
+    "message": "Неизвестная ошибка"
+  },
+  "availableOnServer": {
+    "message": "Есть в $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "availableOnServerPartial": {
+    "message": "Частично есть в $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "serverPartial": {
+    "message": "$SERVER$ (частично)",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "notOnServerYet": {
+    "message": "Пока нет в $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "setUpServer": {
+    "message": "Настроить $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "jellyseerrNotConfigured": {
+    "message": "Jellyseerr не настроен"
+  },
+  "jellyseerrNotConfiguredPopup": {
+    "message": "Откройте окно расширения и укажите адрес Jellyseerr и API-ключ."
+  },
+  "jellyseerrNotConfiguredSettings": {
+    "message": "Укажите адрес Jellyseerr и API-ключ в настройках расширения."
+  },
+  "connectionError": {
+    "message": "Ошибка подключения"
+  },
+  "noResults": {
+    "message": "Ничего не найдено"
+  },
+  "notFoundOnJellyseerr": {
+    "message": "«$QUERY$» не найдено в Jellyseerr.",
+    "placeholders": {
+      "query": {
+        "content": "$1"
+      }
+    }
+  },
+  "extensionSettings": {
+    "message": "Настройки расширения"
+  },
+  "openSettings": {
+    "message": "Открыть настройки"
+  },
+  "badgeAvailableOnTheServer": {
+    "message": "Есть на сервере"
+  },
+  "badgePartiallyAvailable": {
+    "message": "Есть частично"
+  },
+  "badgeConfigureExtension": {
+    "message": "Настроить расширение"
+  },
+  "badgeChecking": {
+    "message": "Проверяю…"
+  },
+  "badgeError": {
+    "message": "Ошибка: $MESSAGE$",
+    "placeholders": {
+      "message": {
+        "content": "$1"
+      }
+    }
+  },
+  "badgeOpenTitleOnServer": {
+    "message": "Открыть «$TITLE$» на сервере",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "badgeRequestTitle": {
+    "message": "Запросить «$TITLE$» в Jellyseerr",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupSubtitle": {
+    "message": "Настройте подключение к серверу"
+  },
+  "popupLanguage": {
+    "message": "Язык"
+  },
+  "popupLanguageAuto": {
+    "message": "Как в браузере"
+  },
+  "popupServerType": {
+    "message": "Тип сервера"
+  },
+  "popupConnection": {
+    "message": "Подключение"
+  },
+  "popupLocalUrl": {
+    "message": "Адрес в локальной сети (основной)"
+  },
+  "popupLocalUrlHint": {
+    "message": "Используется, когда устройство в одной сети с сервером."
+  },
+  "popupJellyseerrLocalUrlHint": {
+    "message": "Используется, когда устройство в одной сети с Jellyseerr."
+  },
+  "popupProbe": {
+    "message": "Проверить локальный адрес"
+  },
+  "popupProbing": {
+    "message": "Проверяю…"
+  },
+  "popupPublicUrl": {
+    "message": "Внешний адрес (запасной)"
+  },
+  "popupPublicUrlHint": {
+    "message": "Используется, когда локальный адрес недоступен (например, вне дома)."
+  },
+  "popupApiKey": {
+    "message": "API-ключ"
+  },
+  "popupApiKeyPlaceholder": {
+    "message": "Введите API-ключ"
+  },
+  "popupJellyseerrApiKeyPlaceholder": {
+    "message": "Введите API-ключ Jellyseerr"
+  },
+  "popupTestConnection": {
+    "message": "Проверить подключение"
+  },
+  "popupTesting": {
+    "message": "Проверяю…"
+  },
+  "popupConnected": {
+    "message": "Подключение работает!"
+  },
+  "popupConnectionFailed": {
+    "message": "Не удалось подключиться. Проверьте адрес и API-ключ."
+  },
+  "popupTestingConnection": {
+    "message": "Проверяю подключение…"
+  },
+  "popupLocalReachable": {
+    "message": "Локальный сервер доступен!"
+  },
+  "popupLocalUnreachable": {
+    "message": "Локальный сервер недоступен — будет использован внешний адрес."
+  },
+  "popupProbingLocal": {
+    "message": "Проверяю локальный сервер…"
+  },
+  "popupTestJellyseerr": {
+    "message": "Проверить Jellyseerr"
+  },
+  "popupJellyseerrConnected": {
+    "message": "Jellyseerr подключён!"
+  },
+  "popupJellyseerrFailed": {
+    "message": "Не удалось подключиться к Jellyseerr."
+  },
+  "popupTestingJellyseerr": {
+    "message": "Проверяю Jellyseerr…"
+  },
+  "popupSave": {
+    "message": "Сохранить настройки"
+  },
+  "popupSaved": {
+    "message": "Настройки сохранены!"
+  },
+  "popupSaveFailed": {
+    "message": "Не удалось сохранить настройки."
+  },
+  "swJellyseerrDisabled": {
+    "message": "Jellyseerr не включён"
+  },
+  "swJellyseerrDisabledConfigure": {
+    "message": "Jellyseerr не включён. Настройте его в окне расширения."
+  },
+  "swMediaNotFound": {
+    "message": "Не нашёл этот тайтл в Jellyseerr"
+  },
+  "swRequestSubmitted": {
+    "message": "Заявка отправлена в $URL$!",
+    "placeholders": {
+      "url": {
+        "content": "$1"
+      }
+    }
+  },
+  "swCsrfHint": {
+    "message": "Как исправить: откройте $URL$/settings/network и выключите «Enable CSRF Protection».",
+    "placeholders": {
+      "url": {
+        "content": "$1"
+      }
+    }
+  }
+}
