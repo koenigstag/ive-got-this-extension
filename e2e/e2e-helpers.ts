@@ -44,6 +44,8 @@ export const fixtureUrls: Record<string, string> = {
   'netflix-public-movie.html': 'https://www.netflix.com/de/title/81458416',
   'amazon-movie.html': 'https://www.amazon.com/gp/video/detail/B00BI1KNY6',
   'amazon-series.html': 'https://www.amazon.com/gp/video/detail/B07QJ2J5HP',
+  'ivi-movie.html': 'https://www.ivi.ru/watch/109140',
+  'ivi-series.html': 'https://www.ivi.ru/watch/himera',
 };
 
 /** Standard mock responses used across tests. */

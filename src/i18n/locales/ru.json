@@ -3,7 +3,7 @@
     "message": "I've got this!"
   },
   "extDescription": {
-    "message": "Проверяет, есть ли фильмы и сериалы с IMDb, Trakt, Netflix и других сайтов на вашем сервере Emby или Jellyfin. Работает с Jellyseerr."
+    "message": "Проверяет, есть ли фильмы и сериалы с IMDb, Trakt, Netflix, ivi и других сайтов на вашем сервере Emby или Jellyfin. Работает с Jellyseerr."
   },
   "poweredBy": {
     "message": "По данным Jellyseerr · $SERVER$",

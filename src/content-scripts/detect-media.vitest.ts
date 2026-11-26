@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Option } from 'effect';
-import { identifySite, detectMedia, detectMediaOption } from './detect-media.js';
+import { identifySite, detectMedia, detectMediaOption, cleanIviTitle } from './detect-media.js';
 
 const E2E_FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), '../../e2e/fixtures');
 
@@ -38,6 +38,13 @@ describe('identifySite', () => {
 
   it('identifies JustWatch', () => {
     expect(identifySite('https://www.justwatch.com/us/movie/the-matrix')).toBe('justwatch');
+  });
+
+  it('identifies ivi on ivi.ru and on ivi.tv', () => {
+    expect(identifySite('https://www.ivi.ru/watch/himera')).toBe('ivi');
+    expect(identifySite('https://ivi.ru/watch/himera')).toBe('ivi');
+    expect(identifySite('https://www.ivi.tv/watch/himera')).toBe('ivi');
+    expect(identifySite('https://www.kiwi.ru/watch/himera')).toBe('unknown');
   });
 
   it('returns unknown for unsupported sites', () => {
@@ -434,6 +441,118 @@ describe('detectMedia', () => {
       const result = detectMedia();
       expect(result?.type).toBe('movie');
       expect(result?.title).toBe('Fallback Title');
+    });
+  });
+
+  describe('ivi detection', () => {
+    const setIviPage = (url: string, ogTitle: string | undefined, body: string): void => {
+      Object.defineProperty(window, 'location', {
+        value: new URL(url),
+        writable: true,
+        configurable: true,
+      });
+      if (ogTitle) {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', 'og:title');
+        meta.setAttribute('content', ogTitle);
+        document.head.appendChild(meta);
+      }
+      document.body.innerHTML = body;
+    };
+
+    const movieParams = `
+      <div class="params meta__params" data-test="meta_params">
+        <ul class="paramsList__container">
+          <div class="ratingParams">7,9</div>
+          <a href="/movies/2010">2010</a>
+          <div data-test="content-duration">1 ч. 30 мин.</div>
+          <div class="restrict"><div>16+</div></div>
+        </ul>
+      </div>`;
+
+    const seriesParams = (years: string) => `
+      <div class="serieBadge meta__serieBadge" data-test="serieBadge"><button>Серия 1 сезон 1</button></div>
+      <div class="params meta__params" data-test="meta_params">
+        <ul class="paramsList__container">
+          <div class="ratingParams">8,6</div>
+          <a href="/series/2022">${years}</a>
+          <div class="nbl-link_noLink">2 сезона</div>
+          <div class="restrict"><div>18+</div></div>
+        </ul>
+      </div>`;
+
+    it('cleans og:title, heading and episode titles', () => {
+      const cases = [
+        { raw: 'Химера — на Иви!', expected: 'Химера' },
+        { raw: 'Химера 1 сезон 3 серия', expected: 'Химера' },
+        { raw: 'Сериал Химера смотреть онлайн', expected: 'Химера' },
+        { raw: 'Фильм Глухарь в кино смотреть онлайн', expected: 'Глухарь в кино' },
+        { raw: 'Возмездие (2019) — на Иви!', expected: 'Возмездие (2019)' },
+        {
+          raw: 'Человек-паук: Через вселенные — на Иви!',
+          expected: 'Человек-паук: Через вселенные',
+        },
+        { raw: 'Chimera — on ivi', expected: 'Chimera' },
+      ];
+      for (const { raw, expected } of cases) {
+        expect(cleanIviTitle(raw)).toBe(expected);
+      }
+    });
+
+    it('detects a movie with its year', () => {
+      setIviPage(
+        'https://www.ivi.ru/watch/109140',
+        'Глухарь в кино — на Иви!',
+        `<h1>Фильм Глухарь в кино смотреть онлайн</h1>${movieParams}`,
+      );
+
+      expect(detectMedia()).toEqual({ type: 'movie', title: 'Глухарь в кино', year: 2010 });
+    });
+
+    it('detects a series from the season count and takes the first year of a range', () => {
+      setIviPage(
+        'https://www.ivi.ru/watch/himera',
+        'Химера — на Иви!',
+        `<h1>Сериал Химера смотреть онлайн</h1>${seriesParams('2022-2023')}`,
+      );
+
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Химера', year: 2022 });
+    });
+
+    it('detects the show on an episode page', () => {
+      setIviPage(
+        'https://www.ivi.ru/watch/himera/495880',
+        'Химера 1 сезон 3 серия',
+        `<h1>Химера 1 сезон 3 серия смотреть онлайн</h1>
+         <div data-test="meta_params"><a href="/series/2022">2022</a></div>`,
+      );
+
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Химера', year: 2022 });
+    });
+
+    it('splits the year off a disambiguated title', () => {
+      setIviPage('https://www.ivi.ru/watch/vozmezdiye-2019', 'Возмездие (2019) — на Иви!', '');
+
+      expect(detectMedia()).toEqual({ type: 'movie', title: 'Возмездие', year: 2019 });
+    });
+
+    it('falls back to the h1 when there is no og:title', () => {
+      setIviPage(
+        'https://www.ivi.tv/watch/metal-family',
+        undefined,
+        `<h1>Мультфильм Metal Family смотреть онлайн</h1>${seriesParams('2018')}`,
+      );
+
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Metal Family', year: 2018 });
+    });
+
+    it('returns undefined off title pages and without a title', () => {
+      setIviPage('https://www.ivi.ru/series/2022', 'Сериалы — на Иви!', '<h1>Сериалы</h1>');
+      expect(detectMedia()).toBeUndefined();
+
+      document.head.innerHTML = '';
+      setIviPage('https://www.ivi.ru/watch/himera', undefined, '<div></div>');
+      expect(detectMedia()).toBeUndefined();
     });
   });
 

@@ -4,6 +4,7 @@ import {
   buildCheckPayload,
   buildCheckPayloadEffect,
   getJustWatchPageType,
+  getIviTitleSlug,
 } from './content-script-helpers.js';
 import type { DetectedMedia } from '../types/index.js';
 
@@ -188,5 +189,28 @@ describe('getJustWatchPageType', () => {
     expect(getJustWatchPageType('https://www.justwatch.com/us/movie/search-party?ref=search')).toBe(
       'detail',
     );
+  });
+});
+
+describe('getIviTitleSlug', () => {
+  it('returns the slug of a title page', () => {
+    expect(getIviTitleSlug('https://www.ivi.ru/watch/himera')).toBe('himera');
+    expect(getIviTitleSlug('https://www.ivi.tv/watch/109140')).toBe('109140');
+  });
+
+  it('returns the same slug for episode, season and other sub-pages', () => {
+    expect(getIviTitleSlug('https://www.ivi.ru/watch/himera/495880')).toBe('himera');
+    expect(getIviTitleSlug('https://www.ivi.ru/watch/himera/season1')).toBe('himera');
+    expect(getIviTitleSlug('https://www.ivi.ru/watch/himera/description')).toBe('himera');
+  });
+
+  it('accepts a language prefix', () => {
+    expect(getIviTitleSlug('https://www.ivi.tv/en/watch/himera')).toBe('himera');
+  });
+
+  it('returns undefined for pages that are not titles', () => {
+    expect(getIviTitleSlug('https://www.ivi.ru/')).toBeUndefined();
+    expect(getIviTitleSlug('https://www.ivi.ru/series/2022')).toBeUndefined();
+    expect(getIviTitleSlug('https://www.ivi.ru/watch')).toBeUndefined();
   });
 });

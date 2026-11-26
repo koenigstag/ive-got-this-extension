@@ -3,7 +3,7 @@
     "message": "I've got this!"
   },
   "extDescription": {
-    "message": "Check if movies and TV shows on IMDb, Trakt, Netflix, and more are on your Emby/Jellyfin server. Integrated with Jellyseerr."
+    "message": "Check if movies and TV shows on IMDb, Trakt, Netflix, ivi, and more are on your Emby/Jellyfin server. Integrated with Jellyseerr."
   },
   "poweredBy": {
     "message": "Powered by Jellyseerr · $SERVER$",

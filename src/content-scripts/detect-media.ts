@@ -1,5 +1,6 @@
 import { Option } from 'effect';
 import type { DetectedMedia, SourceSite } from '../types/index.js';
+import { getIviTitleSlug } from './content-script-helpers.js';
 
 /**
  * Identify the current site from the URL.
@@ -16,6 +17,8 @@ export const identifySite = (url: string): SourceSite => {
   if (hostname.includes('google.com')) return 'google';
   if (hostname.includes('bing.com')) return 'bing';
   if (hostname.includes('justwatch.com')) return 'justwatch';
+  // ivi.ru sends visitors outside Russia to ivi.tv, which runs the same site.
+  if (/(^|\.)ivi\.(ru|tv)$/.test(hostname)) return 'ivi';
 
   return 'unknown';
 };
@@ -44,6 +47,8 @@ export const detectMedia = (): DetectedMedia | undefined => {
       return detectFromBing();
     case 'justwatch':
       return detectFromJustWatch();
+    case 'ivi':
+      return detectFromIvi();
     default:
       return undefined;
   }
@@ -546,4 +551,91 @@ const detectFromJustWatch = (): DetectedMedia | undefined => {
   }
 
   return { type: 'series', title, year };
+};
+
+/** Year in parentheses that ivi appends to tell same-named titles apart: "Возмездие (2019)". */
+const IVI_TITLE_YEAR = /\s*\(((?:19|20)\d{2})\)\s*$/;
+
+/**
+ * Clean an ivi.ru title from og:title or the page heading.
+ *   - "Химера — на Иви!"                     → "Химера"
+ *   - "Химера 1 сезон 3 серия"               → "Химера" (episode pages)
+ *   - "Сериал Химера смотреть онлайн"        → "Химера" (h1)
+ * The year disambiguator ("Возмездие (2019)") is kept here and split off by
+ * the caller.
+ */
+export const cleanIviTitle = (raw: string): string | undefined => {
+  const cleaned = raw
+    // "Title — на Иви!" / "Title — on ivi"
+    .replace(/\s+[—–-]\s+[^—–-]*(?:иви|ivi)!?\s*$/i, '')
+    // "Сериал Title смотреть онлайн" (h1)
+    .replace(/\s+смотреть\s+онлайн.*$/i, '')
+    .replace(
+      /^(?:Фильм|Сериал|Мультфильм|Мультсериал|Аниме|Шоу|Видео|Спектакль|Концерт|Передача|Программа)\s+/i,
+      '',
+    )
+    // Episode pages: "Title 1 сезон 3 серия"
+    .replace(/\s+\d+\s+(?:сезон|серия|season|episode)(?:\s.*)?$/i, '')
+    .trim();
+
+  return cleaned || undefined;
+};
+
+/**
+ * Detect media from ivi.ru (and ivi.tv, where ivi.ru sends visitors from
+ * outside Russia) title pages: `/watch/<slug>` and its episode pages.
+ *
+ * ivi is a single-page app: the content script reads only what the app keeps
+ * up to date in the DOM after in-app navigation — og:title, the h1 and the
+ * parameter row under the title (year, "N сезон"). The pages carry no IMDb,
+ * TMDB or Kinopoisk ids, so the title (usually Russian) and the year are all
+ * there is to search Jellyseerr with.
+ */
+const detectFromIvi = (): DetectedMedia | undefined => {
+  const url = window.location.href;
+  const slug = getIviTitleSlug(url);
+  if (!slug) return undefined;
+
+  const ogTitle = document
+    .querySelector<HTMLMetaElement>('meta[property="og:title"]')
+    ?.getAttribute('content');
+  const heading = document.querySelector('h1')?.textContent ?? '';
+
+  const rawTitle = (ogTitle && cleanIviTitle(ogTitle)) || cleanIviTitle(heading);
+  if (!rawTitle) return undefined;
+
+  const titleYear = rawTitle.match(IVI_TITLE_YEAR);
+  const title = rawTitle.replace(IVI_TITLE_YEAR, '').trim() || rawTitle;
+
+  // The parameter row holds separate elements: "8,4", "2019", "1 сезон", "16+".
+  const params = document.querySelector('[data-test="meta_params"]');
+  const paramTexts = params
+    ? Array.from(params.querySelectorAll('*'))
+        .filter((el) => el.children.length === 0)
+        .map((el) => el.textContent?.trim() ?? '')
+    : [];
+
+  // "2019" for a film, "2022-2023" for a show that ran several years.
+  let year: number | undefined;
+  for (const text of paramTexts) {
+    const match = text.match(/^((?:19|20)\d{2})(?:\s*[-–—]\s*\d{2,4})?$/);
+    if (match) {
+      year = parseInt(match[1], 10);
+      break;
+    }
+  }
+  if (!year && titleYear) year = parseInt(titleYear[1], 10);
+
+  const path = new URL(url).pathname;
+  const isSeries =
+    /\/watch\/[^/]+\/(?:\d+|season\d+)\/?$/.test(path) ||
+    !!document.querySelector('[data-test="serieBadge"], [data-test="series"]') ||
+    paramTexts.some((text) => /^\d+\s+(?:сезон|season)/i.test(text));
+
+  console.log(
+    `[Media Connector] ivi detection — title: "${title}", year: ${year}, type: ${isSeries ? 'series' : 'movie'}`,
+  );
+
+  // Episode pages are treated as the show: the card is about the series.
+  return isSeries ? { type: 'series', title, year } : { type: 'movie', title, year };
 };

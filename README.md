@@ -12,12 +12,12 @@
 
 "I've got this!" is a powerful browser extension designed for self-hosted media enthusiasts. It seamlessly bridges the gap between popular media discovery sites and your personal Emby or Jellyfin server.
 
-As you browse titles on IMDb, Trakt, Netflix, Amazon Prime Video, or JustWatch, the extension automatically detects the media and displays its availability status directly on the page. If a movie or show is missing from your collection, you can submit a request via Jellyseerr with a single click.
+As you browse titles on IMDb, Trakt, Netflix, Amazon Prime Video, JustWatch, or ivi, the extension automatically detects the media and displays its availability status directly on the page. If a movie or show is missing from your collection, you can submit a request via Jellyseerr with a single click.
 
 ## Key Features
 
 - **Real-time Detection:** Automatically identifies movies, series, seasons, and episodes on supported platforms.
-- **Deep Integration:** Injects native-feeling UI elements (badges, sidebars, and buttons) into IMDb, Trakt, JustWatch, Netflix, and Amazon.
+- **Deep Integration:** Injects native-feeling UI elements (badges, sidebars, and buttons) into IMDb, Trakt, JustWatch, Netflix, Amazon, and ivi.
 - **Search Engine Enhancement:** Adds a dedicated media status sidebar to Google and Bing search results.
 - **One-Click Requests:** Integrated with Jellyseerr/Overseerr for instant media requests when content isn't found on your server.
 - **Smart Deep Linking:** Jump directly from a discovery site to the playback page on your own Emby or Jellyfin instance.
