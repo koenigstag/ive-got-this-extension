@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Option } from 'effect';
 import { identifySite, detectMedia, detectMediaOption } from './detect-media.js';
+
+const E2E_FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), '../../e2e/fixtures');
 
 describe('identifySite', () => {
   it('identifies IMDb', () => {
@@ -15,6 +20,7 @@ describe('identifySite', () => {
 
   it('identifies Netflix', () => {
     expect(identifySite('https://www.netflix.com/title/80100172')).toBe('netflix');
+    expect(identifySite('https://www.netflix.com/de-en/title/80057281')).toBe('netflix');
   });
 
   it('identifies Amazon', () => {
@@ -589,6 +595,89 @@ describe('detectMedia', () => {
       const result = detectMedia();
       expect(result).toBeDefined();
       expect(result!.type).toBe('movie');
+    });
+
+    /** Load an e2e fixture (a trimmed copy of a live page) at the given URL. */
+    const loadNetflixFixture = (file: string, url: string) => {
+      Object.defineProperty(window, 'location', {
+        value: new URL(url),
+        writable: true,
+        configurable: true,
+      });
+      const html = readFileSync(resolve(E2E_FIXTURES, file), 'utf-8');
+      const parsed = new DOMParser().parseFromString(html, 'text/html');
+      document.head.innerHTML = parsed.head.innerHTML;
+      document.body.innerHTML = parsed.body.innerHTML;
+    };
+
+    it('detects a series on the public title page, without the latest season year', () => {
+      loadNetflixFixture(
+        'netflix-public-series.html',
+        'https://www.netflix.com/de-en/title/80057281',
+      );
+
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Stranger Things' });
+    });
+
+    it('detects a movie and its release year on the public title page', () => {
+      loadNetflixFixture('netflix-public-movie.html', 'https://www.netflix.com/de/title/81458416');
+
+      expect(detectMedia()).toEqual({
+        type: 'movie',
+        title: 'Glass Onion: A Knives Out Mystery',
+        year: 2022,
+      });
+    });
+
+    it('takes the type from JSON-LD, whatever the UI language', () => {
+      Object.defineProperty(window, 'location', {
+        value: new URL('https://www.netflix.com/de/title/80192098'),
+        writable: true,
+        configurable: true,
+      });
+      document.head.innerHTML = `
+        <script type="application/ld+json">
+          {"@type":"TVSeries","name":"Haus des Geldes","numberOfSeasons":5}
+        </script>
+      `;
+      document.body.innerHTML = `
+        <h1>Haus des Geldes</h1>
+        <div data-uia="metadata"><ul><li>2021</li><li>5 Teile</li><li>16</li></ul></div>
+      `;
+
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Haus des Geldes' });
+    });
+
+    it('detects a series from the episodes section when there is no JSON-LD', () => {
+      Object.defineProperty(window, 'location', {
+        value: new URL('https://www.netflix.com/ua/title/80057281'),
+        writable: true,
+        configurable: true,
+      });
+      document.body.innerHTML = `
+        <h1>Stranger Things</h1>
+        <div data-uia="episodes"><div data-uia="season-selector"></div></div>
+      `;
+
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Stranger Things' });
+    });
+
+    it('detects nothing on a title page that is not available in the country', () => {
+      Object.defineProperty(window, 'location', {
+        value: new URL('https://www.netflix.com/de-en/title/70079583'),
+        writable: true,
+        configurable: true,
+      });
+      document.head.innerHTML = `
+        <script type="application/ld+json">{"@type":"Movie","name":" "}</script>
+        <script type="application/ld+json">not json</script>
+      `;
+      document.body.innerHTML = `
+        <h1></h1>
+        <div data-uia="metadata"><ul><li>Action</li></ul></div>
+      `;
+
+      expect(detectMedia()).toBeUndefined();
     });
   });
 
