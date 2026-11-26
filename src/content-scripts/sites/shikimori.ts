@@ -2,6 +2,7 @@ import {
   COMBINED_SVG,
   sendMessage,
   createInfoRow,
+  createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
 } from '../common-ui.js';
@@ -25,7 +26,10 @@ export const SHIKIMORI_SKELETON_ID = 'media-connector-shikimori-skeleton';
  * a page visited again gets its card from memory without a new search.
  */
 export const initShikimori = (): (() => void) => {
-  const shown = new Map<string, { title: string; response: SearchJellyseerrResponse }>();
+  const shown = new Map<
+    string,
+    { title: string; mediaType?: 'movie' | 'tv'; response: SearchJellyseerrResponse }
+  >();
   let activeId: string | undefined;
   let searching = false;
   // Bumped on every visit, so a search that outlives its page is dropped.
@@ -43,7 +47,7 @@ export const initShikimori = (): (() => void) => {
 
     const known = shown.get(id);
     if (known) {
-      injectShikimoriCard(known.response, known.title);
+      injectShikimoriCard(known.response, known.title, known.mediaType);
       return;
     }
 
@@ -76,8 +80,8 @@ export const initShikimori = (): (() => void) => {
 
       removeShikimoriSkeleton();
       if (!response) return;
-      shown.set(id, { title: search.displayTitle, response });
-      injectShikimoriCard(response, search.displayTitle);
+      shown.set(id, { title: search.displayTitle, mediaType: search.mediaType, response });
+      injectShikimoriCard(response, search.displayTitle, search.mediaType);
     } finally {
       if (thisVisit === visit) {
         searching = false;
@@ -176,6 +180,7 @@ const showShikimoriSkeleton = (serverLabel: string): void => {
 export const injectShikimoriCard = (
   response: SearchJellyseerrResponse,
   queryTitle: string,
+  mediaType?: 'movie' | 'tv',
 ): void => {
   if (document.getElementById(SHIKIMORI_CARD_ID)) return;
 
@@ -190,7 +195,7 @@ export const injectShikimoriCard = (
   } else if (error) {
     card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
   } else if (results.length === 0) {
-    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
+    card.appendChild(createNotFoundRows(response, queryTitle, mediaType));
   } else {
     results.forEach((item, idx) => {
       const row = buildResultRow(item, serverLabel);

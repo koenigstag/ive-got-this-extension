@@ -141,6 +141,32 @@ describe('Kinopoisk card', () => {
     expect(document.querySelectorAll(`#${KINOPOISK_CARD_ID}`)).toHaveLength(1);
   });
 
+  it('offers a Prowlarr search for a title Jellyseerr does not know', async () => {
+    renderTitle('41519');
+    mockedSend.mockImplementation(async (message: { type: string }) =>
+      message.type === 'GET_CONFIG'
+        ? { type: 'GET_CONFIG_RESPONSE', payload: { serverType: 'jellyfin' } }
+        : {
+            type: 'SEARCH_JELLYSEERR_RESPONSE',
+            payload: {
+              results: [],
+              jellyseerrEnabled: true,
+              serverType: 'jellyfin',
+              prowlarrUrl: 'http://prowlarr.lab.home',
+            },
+          },
+    );
+
+    stop = initKinopoisk();
+    await vi.waitFor(() => expect(document.getElementById(KINOPOISK_CARD_ID)).not.toBeNull());
+
+    const card = document.getElementById(KINOPOISK_CARD_ID)!;
+    expect(card.textContent).toContain('"Брат" was not found on Jellyseerr.');
+    expect(card.querySelector('[data-action="find-release"]')?.textContent).toContain(
+      'Find a release',
+    );
+  });
+
   it('does nothing off title pages', async () => {
     setUrl('https://www.kinopoisk.ru/lists/movies/top250/');
     document.body.innerHTML = '<main><h1>250 лучших фильмов</h1></main>';

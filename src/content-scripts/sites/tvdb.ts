@@ -2,6 +2,7 @@ import {
   COMBINED_SVG,
   sendMessage,
   createInfoRow,
+  createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
 } from '../common-ui.js';
@@ -41,7 +42,7 @@ export const initTvdb = async (): Promise<void> => {
   removeTvdbSkeleton();
   if (!response) return;
 
-  injectTvdbCard(response, page.title);
+  injectTvdbCard(response, page.title, page.mediaType);
 };
 
 const removeTvdbSkeleton = (): void => {
@@ -114,7 +115,11 @@ const showTvdbSkeleton = (serverLabel: string): void => {
   placeOnTvdbPage(wrapForTvdb(TVDB_SKELETON_ID, card));
 };
 
-export const injectTvdbCard = (response: SearchJellyseerrResponse, queryTitle: string): void => {
+export const injectTvdbCard = (
+  response: SearchJellyseerrResponse,
+  queryTitle: string,
+  mediaType?: 'movie' | 'tv',
+): void => {
   if (document.getElementById(TVDB_CARD_ID)) return;
 
   const { results, jellyseerrEnabled, serverType, error } = response.payload;
@@ -128,7 +133,7 @@ export const injectTvdbCard = (response: SearchJellyseerrResponse, queryTitle: s
   } else if (error) {
     card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
   } else if (results.length === 0) {
-    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
+    card.appendChild(createNotFoundRows(response, queryTitle, mediaType));
   } else {
     results.forEach((item, idx) => {
       const row = buildResultRow(item, serverLabel);

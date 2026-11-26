@@ -2,6 +2,7 @@ import {
   COMBINED_SVG,
   sendMessage,
   createInfoRow,
+  createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
 } from '../common-ui.js';
@@ -29,7 +30,10 @@ const CHECK_INTERVAL_MS = 400;
  * and puts a card the app's re-render removed back from memory.
  */
 export const initKinopoisk = (): (() => void) => {
-  const shown = new Map<string, { title: string; response: SearchJellyseerrResponse }>();
+  const shown = new Map<
+    string,
+    { title: string; mediaType: 'movie' | 'tv'; response: SearchJellyseerrResponse }
+  >();
   let activeId: string | undefined;
   let searchingId: string | undefined;
   let pendingCheck: ReturnType<typeof setTimeout> | undefined;
@@ -46,7 +50,7 @@ export const initKinopoisk = (): (() => void) => {
 
     const known = shown.get(id);
     if (known) {
-      injectKinopoiskCard(known.response, known.title, id);
+      injectKinopoiskCard(known.response, known.title, id, known.mediaType);
       return;
     }
     if (searchingId === id) return;
@@ -79,8 +83,8 @@ export const initKinopoisk = (): (() => void) => {
 
       removeKinopoiskSkeleton();
       if (!response) return;
-      shown.set(id, { title: page.title, response });
-      injectKinopoiskCard(response, page.title, id);
+      shown.set(id, { title: page.title, mediaType: page.mediaType, response });
+      injectKinopoiskCard(response, page.title, id, page.mediaType);
     } finally {
       if (searchingId === id) searchingId = undefined;
       if (activeId === id) removeKinopoiskSkeleton();
@@ -187,6 +191,7 @@ export const injectKinopoiskCard = (
   response: SearchJellyseerrResponse,
   queryTitle: string,
   kinopoiskId: string,
+  mediaType?: 'movie' | 'tv',
 ): void => {
   if (document.getElementById(KINOPOISK_CARD_ID)) return;
 
@@ -202,7 +207,7 @@ export const injectKinopoiskCard = (
   } else if (error) {
     card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
   } else if (results.length === 0) {
-    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
+    card.appendChild(createNotFoundRows(response, queryTitle, mediaType));
   } else {
     results.forEach((item, idx) => {
       const row = buildResultRow(item, serverLabel);

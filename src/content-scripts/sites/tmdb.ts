@@ -2,6 +2,7 @@ import {
   COMBINED_SVG,
   sendMessage,
   createInfoRow,
+  createNotFoundRows,
   buildResultRow,
   injectSkeletonKeyframes,
 } from '../common-ui.js';
@@ -42,7 +43,7 @@ export const initTmdb = async (): Promise<void> => {
   removeTmdbSkeleton();
   if (!response) return;
 
-  injectTmdbCard(response, page.title);
+  injectTmdbCard(response, page.title, page.mediaType);
 };
 
 const removeTmdbSkeleton = (): void => {
@@ -119,7 +120,11 @@ const showTmdbSkeleton = (serverLabel: string): void => {
   placeOnTmdbPage(wrapForTmdb(TMDB_SKELETON_ID, card));
 };
 
-export const injectTmdbCard = (response: SearchJellyseerrResponse, queryTitle: string): void => {
+export const injectTmdbCard = (
+  response: SearchJellyseerrResponse,
+  queryTitle: string,
+  mediaType?: 'movie' | 'tv',
+): void => {
   if (document.getElementById(TMDB_CARD_ID)) return;
 
   const { results, jellyseerrEnabled, serverType, error } = response.payload;
@@ -133,7 +138,7 @@ export const injectTmdbCard = (response: SearchJellyseerrResponse, queryTitle: s
   } else if (error) {
     card.appendChild(createInfoRow('⚠️', t('connectionError'), error));
   } else if (results.length === 0) {
-    card.appendChild(createInfoRow('🔍', t('noResults'), t('notFoundOnJellyseerr', queryTitle)));
+    card.appendChild(createNotFoundRows(response, queryTitle, mediaType));
   } else {
     results.forEach((item, idx) => {
       const row = buildResultRow(item, serverLabel);
