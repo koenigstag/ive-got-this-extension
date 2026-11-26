@@ -45,6 +45,11 @@ const PAGES = [
   'https://app.trakt.tv/shows/the-mentalist',
   'https://www.google.com/search?q=the+matrix+1999',
   'https://www.bing.com/search?q=the+matrix',
+  'https://yandex.ru/search/?text=matrix+1999',
+  // Yandex drops the slash when it adds the region: /search?text=...&lr=...
+  'https://yandex.ru/search?text=matrix+1999&lr=213',
+  'https://ya.ru/search/?text=breaking+bad',
+  'https://yandex.com/search/?text=breaking+bad',
   'https://www.justwatch.com/us/movie/the-matrix',
   'https://www.justwatch.com/us/tv-show/breaking-bad',
   'https://www.justwatch.com/us/search?q=matrix',
@@ -74,6 +79,9 @@ describe('manifest.json', () => {
     );
     expect(
       matchesPattern('https://www.netflix.com/title/*', 'https://www.netflix.com/de/title/1'),
+    ).toBe(false);
+    expect(
+      matchesPattern('https://yandex.ru/search*', 'https://music.yandex.ru/search?text=x'),
     ).toBe(false);
   });
 });

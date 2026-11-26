@@ -34,6 +34,8 @@ export const fixtureUrls: Record<string, string> = {
   'google-series.html': 'https://www.google.com/search?q=breaking+bad+tv+series',
   'bing-movie.html': 'https://www.bing.com/search?q=the+matrix',
   'bing-series.html': 'https://www.bing.com/search?q=breaking+bad+tv+series',
+  'yandex-movie.html': 'https://yandex.ru/search/?text=matrix+1999',
+  'yandex-series.html': 'https://ya.ru/search/?text=breaking+bad',
   'justwatch-movie.html': 'https://www.justwatch.com/us/movie/the-matrix',
   'justwatch-series.html': 'https://www.justwatch.com/us/tv-show/breaking-bad',
   'justwatch-search.html': 'https://www.justwatch.com/us/search?q=matrix',

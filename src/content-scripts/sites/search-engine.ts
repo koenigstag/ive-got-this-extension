@@ -11,6 +11,9 @@ import '../../components/search-sidebar/search-sidebar.js';
 const SIDEBAR_ID = 'media-connector-sidebar';
 const SKELETON_ID = 'media-connector-skeleton';
 
+/** The sidebar last put on the page, kept to put it back after Yandex re-renders. */
+let lastSidebar: HTMLElement | undefined;
+
 export const initSearchEngineSidebar = async (): Promise<void> => {
   const media = tryDetectMedia();
   if (!media) return;
@@ -34,8 +37,67 @@ export const initSearchEngineSidebar = async (): Promise<void> => {
   removeSkeleton();
 
   if (!response) return;
+  // The page moved on to another title while Jellyseerr answered (Yandex swaps results
+  // in place): this answer is for a page that is gone.
+  if (mediaKey() !== JSON.stringify(media)) return;
 
   injectSidebar(response, title);
+};
+
+/** What the page shows right now, comparable between calls. */
+const mediaKey = (): string => JSON.stringify(tryDetectMedia() ?? null);
+
+/** How often the Yandex page is checked for a new title. */
+const YANDEX_CHECK_MS = 500;
+/** How long a title has to stay on the page before the sidebar follows it. */
+const YANDEX_SETTLE_MS = 600;
+
+/**
+ * Yandex runs a new search from its own search box without loading a new page: it swaps
+ * the results in place and changes the URL with pushState, which a content script cannot
+ * hear, and the re-rendered right column no longer holds the sidebar. So on Yandex the
+ * sidebar follows the page: when the film or series on it changes and stays for a moment
+ * (the swap passes through half-built states), the old sidebar goes and a new search runs;
+ * when the column was re-rendered for the same title, the sidebar is put back without one.
+ * @returns A function that stops watching (for tests).
+ */
+export const initYandexSearch = (): (() => void) => {
+  let seenKey = mediaKey();
+  let seenAt = 0;
+  let shownKey: string | undefined;
+  let running = false;
+
+  const check = (): void => {
+    const key = mediaKey();
+    if (key !== seenKey) {
+      seenKey = key;
+      seenAt = Date.now();
+      return;
+    }
+    if (running || Date.now() - seenAt < YANDEX_SETTLE_MS) return;
+
+    if (key === shownKey) {
+      if (lastSidebar && !lastSidebar.isConnected) appendSidebarToPage(lastSidebar);
+      return;
+    }
+
+    removeSidebar();
+    shownKey = key;
+    running = true;
+    void initSearchEngineSidebar().finally(() => {
+      running = false;
+    });
+  };
+
+  check();
+  const timer = setInterval(check, YANDEX_CHECK_MS);
+  return () => clearInterval(timer);
+};
+
+const removeSidebar = (): void => {
+  document.getElementById(SIDEBAR_ID)?.remove();
+  removeSkeleton();
+  lastSidebar = undefined;
 };
 
 const showSkeleton = (serverLabel: string): void => {
@@ -99,6 +161,7 @@ const injectSidebar = (response: SearchJellyseerrResponse, queryTitle: string): 
   sidebar.response = response;
   sidebar.queryTitle = queryTitle;
 
+  lastSidebar = sidebar;
   appendSidebarToPage(sidebar);
 };
 
@@ -138,6 +201,34 @@ const appendSidebarToPage = (card: HTMLElement): void => {
     const bContent = document.getElementById('b_content');
     if (bContent) {
       bContent.prepend(card);
+      return;
+    }
+  }
+
+  if (site === 'yandex') {
+    card.style.maxWidth = '100%';
+    card.style.width = '100%';
+    card.style.boxSizing = 'border-box';
+    // Yandex's own film card sits in the right column. The column's id and classes are
+    // sometimes scrambled (`content__right` becomes a random string), the card's are not,
+    // so the sidebar goes right above that card, in whatever column holds it.
+    const entityCard =
+      document.querySelector('.EntityCard_film') ?? document.querySelector('.EntityCard');
+    const entityItem = entityCard?.parentElement;
+    if (entityItem?.parentElement) {
+      entityItem.parentElement.insertBefore(card, entityItem);
+      return;
+    }
+    const aside =
+      document.getElementById('search-result-aside') ?? document.querySelector('.content__right');
+    if (aside) {
+      aside.prepend(card);
+      return;
+    }
+    const results =
+      document.getElementById('search-result') ?? document.querySelector('.content__left');
+    if (results?.parentElement) {
+      results.parentElement.insertBefore(card, results);
       return;
     }
   }

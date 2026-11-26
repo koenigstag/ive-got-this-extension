@@ -16,6 +16,8 @@ export const identifySite = (url: string): SourceSite => {
   if (hostname.includes('amazon.com') || hostname.includes('primevideo.com')) return 'amazon';
   if (hostname.includes('google.com')) return 'google';
   if (hostname.includes('bing.com')) return 'bing';
+  // Yandex serves the same results page on yandex.ru, ya.ru and yandex.com.
+  if (/^(www\.)?(yandex\.(ru|com)|ya\.ru)$/.test(hostname)) return 'yandex';
   if (hostname.includes('justwatch.com')) return 'justwatch';
   // ivi.ru sends visitors outside Russia to ivi.tv, which runs the same site.
   if (/(^|\.)ivi\.(ru|tv)$/.test(hostname)) return 'ivi';
@@ -45,6 +47,8 @@ export const detectMedia = (): DetectedMedia | undefined => {
       return detectFromGoogle();
     case 'bing':
       return detectFromBing();
+    case 'yandex':
+      return detectFromYandex();
     case 'justwatch':
       return detectFromJustWatch();
     case 'ivi':
@@ -435,6 +439,110 @@ const detectFromBing = (): DetectedMedia | undefined => {
   }
 
   return undefined;
+};
+
+/** Words Yandex uses for a series: "сериал", "мультсериал", "5 сезонов", "television series". */
+const YANDEX_SERIES_RE =
+  /сериал|сезон|\b(?:tv|television|web|animated|anime|mini)[ -]?series\b|\bminiseries\b|\bsitcom\b/i;
+/** Words Yandex uses for a film: "фильм", "мультфильм", "film", "movie". */
+const YANDEX_MOVIE_RE = /фильм|\bfilm\b|\bmovie\b/i;
+
+/**
+ * Read the type from a piece of Yandex text. When both a series word and a film word
+ * occur ("2019 film based on the television series"), the one that comes first wins:
+ * that is the head noun of the description.
+ */
+const yandexTypeFromText = (text: string): 'movie' | 'series' | undefined => {
+  const series = text.search(YANDEX_SERIES_RE);
+  const movie = text.search(YANDEX_MOVIE_RE);
+  if (series === -1 && movie === -1) return undefined;
+  if (movie === -1) return 'series';
+  if (series === -1) return 'movie';
+  return series < movie ? 'series' : 'movie';
+};
+
+/**
+ * The year in a Yandex subtitle: the first comma-separated part that is a year or a
+ * range of years ("1999", "2008-2013", "2019–н.в."). A year inside the original
+ * title ("Blade Runner 2049, фильм, 2017") is not a part of its own, so it is skipped.
+ */
+const yandexYearFromSubtitle = (text: string): number | undefined => {
+  for (const part of text.split(',')) {
+    const match = part.match(/^\s*((?:19|20)\d{2})(?:\s*[-–—].*)?\s*$/);
+    if (match) return parseInt(match[1], 10);
+  }
+  return undefined;
+};
+
+/**
+ * The card subtitle's own text ("Chernobyl, сериал, 2019"). The rating line and the age
+ * badge sit in child elements of the same node, so only its direct text is read; if
+ * Yandex ever wraps the text in an element of its own, the text minus the rating is used.
+ */
+const yandexCardSubtitle = (element: Element | null): string => {
+  if (!element) return '';
+  const own = [...element.childNodes]
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent?.trim() ?? '')
+    .filter(Boolean)
+    .join(' ');
+  if (own) return own;
+  const copy = element.cloneNode(true) as Element;
+  copy.querySelectorAll('[class*="Rating"]').forEach((node) => node.remove());
+  return copy.textContent?.trim() ?? '';
+};
+
+/**
+ * Detect media from a Yandex results page (yandex.ru, ya.ru, yandex.com).
+ *
+ * Yandex shows a film or series in one of two ways:
+ *  - a header across the top (`.EntityHeader`): the title in `.EntityHeader-Title`,
+ *    "1999, фантастика, США, 136 мин, 18+" in `.EntityHeader-SubtitleText`, and the type
+ *    in the tiles' class, `EntitySearchTiles_type_film` or `EntitySearchTiles_type_series`;
+ *  - only a card in the right column (`.EntityCard`): the title in `.CardHeader-Title`,
+ *    "Chernobyl, сериал, 2019" in `.CardHeader-Subtitle`.
+ * Either way the right-column card has `EntityCard_film`, which Yandex sets for films and
+ * series alike. People, books, places and the like have no such card and are skipped.
+ * yandex.com leaves the card subtitle out: the type, and a film's year, then come from the
+ * first sentence of the card's short description ("1999 science fiction action film ...").
+ */
+const detectFromYandex = (): DetectedMedia | undefined => {
+  const card = document.querySelector('.EntityCard_film');
+  const tilesClass = [
+    ...(document.querySelector('[class*="EntitySearchTiles_type_"]')?.classList ?? []),
+  ]
+    .find((name) => name.startsWith('EntitySearchTiles_type_'))
+    ?.slice('EntitySearchTiles_type_'.length);
+  const tilesType =
+    tilesClass === 'series' ? 'series' : tilesClass === 'film' ? 'movie' : undefined;
+  if (!card && !tilesType) return undefined;
+
+  const headerTitle = document.querySelector('.EntityHeader-Title');
+  const title = (
+    headerTitle?.getAttribute('title') ||
+    headerTitle?.textContent ||
+    card?.querySelector('.CardHeader-Title')?.textContent ||
+    ''
+  ).trim();
+  if (!title) return undefined;
+
+  const subtitle =
+    document.querySelector('.EntityHeader-SubtitleText')?.textContent?.trim() ||
+    yandexCardSubtitle(card?.querySelector('.CardHeader-Subtitle') ?? null);
+  const description = (
+    card?.querySelector('.RichFactdown-Paragraph')?.textContent?.trim() ?? ''
+  ).split(/\.\s/)[0];
+
+  const type = tilesType ?? yandexTypeFromText(subtitle) ?? yandexTypeFromText(description);
+  if (!type) return undefined;
+
+  let year = yandexYearFromSubtitle(subtitle);
+  if (year === undefined && !subtitle && type === 'movie') {
+    const match = description.match(/^\s*((?:19|20)\d{2})\b/);
+    year = match ? parseInt(match[1], 10) : undefined;
+  }
+
+  return { type, title, year };
 };
 
 /**

@@ -4,7 +4,7 @@ import { initTrakt } from './sites/trakt.js';
 import { initImdb } from './sites/imdb.js';
 import { initJustWatchSPA } from './sites/justwatch.js';
 import { initIvi } from './sites/ivi.js';
-import { initSearchEngineSidebar } from './sites/search-engine.js';
+import { initSearchEngineSidebar, initYandexSearch } from './sites/search-engine.js';
 import { injectStatusIndicator } from './fallback.js';
 import type { CheckMediaResponse, GetConfigResponse } from '../types/messages.js';
 import { setLanguage } from '../i18n/index.js';
@@ -31,6 +31,11 @@ const init = async (): Promise<void> => {
 
   if (site === 'google' || site === 'bing') {
     initSearchEngineSidebar();
+    return;
+  }
+
+  if (site === 'yandex') {
+    initYandexSearch();
     return;
   }
 
