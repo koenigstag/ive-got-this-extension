@@ -30,6 +30,8 @@ export interface MediaServerItem {
   readonly ImageTags?: Record<string, string>;
   /** Overview/description */
   readonly Overview?: string;
+  /** `Virtual` for an item known from metadata but not on disk */
+  readonly LocationType?: string;
 }
 
 /**

@@ -1,7 +1,19 @@
 import { EMBY_SVG, JELLYFIN_SVG, sendMessage, handleRequestClick } from '../common-ui.js';
 import { tryDetectMedia, buildPayload } from '../index.js';
 import { t } from '../../i18n/index.js';
+import { dialogTargetFromMedia, openMediaDialog } from '../media-dialog.js';
 import type { CheckMediaResponse } from '../../types/messages.js';
+
+/**
+ * Open the media dialog for the title on the page.
+ * @returns false when the page shows no title any more
+ */
+const openDialogForPage = (): boolean => {
+  const media = tryDetectMedia();
+  if (!media) return false;
+  openMediaDialog(dialogTargetFromMedia(media));
+  return true;
+};
 
 /**
  * Trakt-specific init.
@@ -95,20 +107,25 @@ const findWhereToWatchContainer = (): Element | undefined => {
 
 /**
  * Modern Trakt UI: Attempt to inject the server item into "Where to Watch" list.
+ *
+ * The item shows the title's state on the server and opens the media dialog,
+ * which has the server link, the Jellyseerr state and the request buttons.
  */
 export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
-  const canLink =
-    (response.payload.status === 'available' || response.payload.status === 'partial') &&
-    response.payload.itemUrl;
-  const canRequest = response.payload.status === 'unavailable';
-  const isUnconfigured = response.payload.status === 'unconfigured';
-
+  const status = response.payload.status;
   const serverType = response.payload.serverType ?? 'emby';
   const serverLabel = serverType === 'jellyfin' ? 'Jellyfin' : 'Emby';
   const logoSvg = serverType === 'jellyfin' ? JELLYFIN_SVG : EMBY_SVG;
 
   // Don't duplicate — if our element already exists, skip
   if (document.getElementById('media-connector-wtw-item')) return;
+
+  let labelText: string;
+  if (status === 'available') labelText = serverLabel;
+  else if (status === 'partial') labelText = t('serverPartial', serverLabel);
+  else if (status === 'unavailable') labelText = t('requestMore');
+  else if (status === 'unconfigured') labelText = t('setUpServer', serverLabel);
+  else return;
 
   const listContainer = findWhereToWatchContainer();
   if (!listContainer) return;
@@ -124,6 +141,7 @@ export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
     padding: 0.5rem;
     gap: 0.25rem;
     border-radius: 0.75rem;
+    cursor: pointer;
   `.replace(/\n/g, '');
 
   const logoContainerStyle = `
@@ -151,47 +169,35 @@ export const tryInjectTraktItem = (response: CheckMediaResponse): void => {
   const item = document.createElement('div');
   item.id = 'media-connector-wtw-item';
   item.className = 'where-to-watch-item';
+  item.setAttribute('role', 'button');
+  item.tabIndex = 0;
+  item.title = labelText;
+  item.innerHTML = `
+    <div class="where-to-watch-item-content" style="${contentStyle}${status === 'unconfigured' ? ' opacity: 0.6;' : ''}">
+      <div class="trakt-streaming-service-logo" style="${logoContainerStyle}">
+        ${logoSvg}
+      </div>
+      <p style="${labelStyle}"></p>
+    </div>`;
+  item.querySelector('p')!.textContent = labelText;
 
-  let labelText: string;
-
-  if (canLink) {
-    labelText = serverLabel;
-    item.innerHTML = `
-      <a target="_blank" tabindex="0" data-color="default"
-         href="${response.payload.itemUrl}"
-         class="trakt-link"
-         style="text-decoration: none; color: inherit; display: flex; width: 100%; height: 100%;">
-        <div class="where-to-watch-item-content" style="${contentStyle}">
-          <div class="trakt-streaming-service-logo" style="${logoContainerStyle}">
-            ${logoSvg}
-          </div>
-          <p style="${labelStyle}">${response.payload.status === 'partial' ? t('serverPartial', labelText) : labelText}</p>
-        </div>
-      </a>`;
-  } else if (canRequest) {
-    labelText = t('request');
-    item.innerHTML = `
-      <div class="where-to-watch-item-content" style="${contentStyle} cursor: pointer;">
-        <div class="trakt-streaming-service-logo" style="${logoContainerStyle}">
-          ${logoSvg}
-        </div>
-        <p style="${labelStyle}">${labelText}</p>
-      </div>`;
-    item.addEventListener('click', () => {
-      handleRequestClick();
-    });
-  } else if (isUnconfigured) {
-    labelText = t('setUpServer', serverLabel);
-    item.innerHTML = `
-      <div class="where-to-watch-item-content" style="${contentStyle} cursor: pointer; opacity: 0.6;">
-        <div class="trakt-streaming-service-logo" style="${logoContainerStyle}">
-          ${logoSvg}
-        </div>
-        <p style="${labelStyle}">${labelText}</p>
-      </div>`;
-  } else {
-    return;
-  }
+  const open = (): void => {
+    // The page no longer shows a title: fall back to the server link.
+    if (!openDialogForPage() && response.payload.itemUrl) {
+      window.open(response.payload.itemUrl, '_blank');
+    }
+  };
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    open();
+  });
+  item.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      open();
+    }
+  });
 
   // Apply item-level styles (no border/ring — matches native items)
   item.setAttribute(

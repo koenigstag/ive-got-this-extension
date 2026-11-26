@@ -2,6 +2,7 @@ import { Effect, Match } from 'effect';
 import { loadConfigEffect, saveConfigEffect } from '../utils/storage.js';
 import {
   checkMediaAvailabilityEffect,
+  getEpisodesOnServerEffect,
   searchByProviderIdEffect,
   testServerConnectionEffect,
 } from '../utils/api-client.js';
@@ -9,15 +10,18 @@ import { clearResolvedUrlCacheEffect, resolveServerUrlEffect } from '../utils/ur
 import {
   testJellyseerrConnectionEffect,
   jellyseerrSearchEffect,
+  getJellyseerrMediaDetailsEffect,
   requestMovieEffect,
   requestTvShowEffect,
 } from '../utils/jellyseerr-client.js';
 import { resolveJellyseerrUrlEffect } from '../utils/url-resolver.js';
-import { setLanguage, t } from '../i18n/index.js';
+import { getLanguage, setLanguage, t } from '../i18n/index.js';
 import { chromeOpenSettingsDeps, openSettingsEffect } from './open-settings.js';
+import { getMediaDetailsEffect, type MediaDetailsDeps } from './media-details.js';
 import type { ExtensionConfig } from '../types/index.js';
 import type {
   CheckMediaMessage,
+  GetMediaDetailsMessage,
   OpenTabMessage,
   RequestMediaMessage,
   SearchJellyseerrMessage,
@@ -58,6 +62,7 @@ const handleMessage = (
   message:
     | CheckMediaMessage
     | RequestMediaMessage
+    | GetMediaDetailsMessage
     | SearchJellyseerrMessage
     | SaveConfigMessage
     | OpenTabMessage
@@ -66,6 +71,7 @@ const handleMessage = (
   Match.value(message.type).pipe(
     Match.when('CHECK_MEDIA', () => handleCheckMedia(message as CheckMediaMessage)),
     Match.when('REQUEST_MEDIA', () => handleRequestMedia(message as RequestMediaMessage)),
+    Match.when('GET_MEDIA_DETAILS', () => handleGetMediaDetails(message as GetMediaDetailsMessage)),
     Match.when('SEARCH_JELLYSEERR', () =>
       handleSearchJellyseerr(message as SearchJellyseerrMessage),
     ),
@@ -227,7 +233,7 @@ const handleRequestMedia = (message: RequestMediaMessage): Effect.Effect<unknown
       if (message.payload.mediaType === 'movie') {
         yield* requestMovieEffect(config, tmdbId);
       } else {
-        yield* requestTvShowEffect(config, tmdbId);
+        yield* requestTvShowEffect(config, tmdbId, message.payload.seasons?.slice());
       }
 
       return {
@@ -263,6 +269,36 @@ const handleRequestMedia = (message: RequestMediaMessage): Effect.Effect<unknown
         });
       }),
     );
+  }).pipe(
+    Effect.catchAll((e) =>
+      Effect.succeed({
+        type: 'ERROR',
+        payload: { message: 'message' in e ? String(e.message) : String(e) },
+      }),
+    ),
+  );
+
+// ---------------------------------------------------------------------------
+// Handler: GET_MEDIA_DETAILS
+// ---------------------------------------------------------------------------
+
+const mediaDetailsDeps: MediaDetailsDeps = {
+  checkAvailability: checkMediaAvailabilityEffect,
+  getEpisodes: getEpisodesOnServerEffect,
+  searchJellyseerr: jellyseerrSearchEffect,
+  // Titles and season names in the dialog's language
+  getJellyseerrDetails: (config, mediaType, tmdbId) =>
+    getJellyseerrMediaDetailsEffect(config, mediaType, tmdbId, getLanguage()),
+};
+
+/**
+ * Gather what the media dialog shows: the title on the server and in Jellyseerr.
+ */
+const handleGetMediaDetails = (message: GetMediaDetailsMessage): Effect.Effect<unknown> =>
+  Effect.gen(function* () {
+    const config = yield* loadConfigEffect;
+    setLanguage(config.ui?.language);
+    return yield* getMediaDetailsEffect(mediaDetailsDeps, config, message.payload);
   }).pipe(
     Effect.catchAll((e) =>
       Effect.succeed({

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Effect } from 'effect';
 import {
+  getEpisodesOnServerEffect,
   buildApiHeaders,
   searchMedia,
   searchMediaEffect,
@@ -878,5 +879,27 @@ describe('checkMediaAvailability', () => {
 
     // No Movie-type items, so with year set it falls back to items[0] (the Series)
     expect(result.status).toBe('available');
+  });
+});
+
+describe('getEpisodesOnServerEffect', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('asks for the episodes on disk only', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ Items: [], TotalRecordCount: 0 }),
+      }),
+    );
+
+    await Effect.runPromise(getEpisodesOnServerEffect(mockEmbyConfig, 'series-1'));
+
+    const url = vi.mocked(fetch).mock.calls[0][0] as string;
+    expect(url).toContain('/Shows/series-1/Episodes?');
+    expect(url).toContain('IsMissing=false');
   });
 });

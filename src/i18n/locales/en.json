@@ -356,5 +356,151 @@
         "content": "$1"
       }
     }
+  },
+  "dialogClose": {
+    "message": "Close"
+  },
+  "dialogLoading": {
+    "message": "Loading…"
+  },
+  "dialogLoadFailed": {
+    "message": "Could not load the details: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogServerUnconfigured": {
+    "message": "$SERVER$ is not set up in the extension.",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogNotOnServer": {
+    "message": "Not on $SERVER$.",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogOnServer": {
+    "message": "On $SERVER$:",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogServerError": {
+    "message": "$SERVER$ did not answer: $ERROR$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      },
+      "error": {
+        "content": "$2"
+      }
+    }
+  },
+  "dialogOpenOnServer": {
+    "message": "Open in $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogJellyseerrDisabled": {
+    "message": "Jellyseerr is not set up in the extension."
+  },
+  "dialogJellyseerrNotFound": {
+    "message": "Jellyseerr did not find this title."
+  },
+  "dialogJellyseerrError": {
+    "message": "Jellyseerr did not answer: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogOpenInJellyseerr": {
+    "message": "Open in Jellyseerr"
+  },
+  "dialogSeasons": {
+    "message": "Seasons"
+  },
+  "dialogSeason": {
+    "message": "Season $NUMBER$",
+    "placeholders": {
+      "number": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogEpisodes": {
+    "message": "$COUNT$ episodes",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogEpisodesOnServer": {
+    "message": "$HAVE$ of $TOTAL$ on the server",
+    "placeholders": {
+      "have": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "dialogEpisodesOnServerOnly": {
+    "message": "$HAVE$ on the server",
+    "placeholders": {
+      "have": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogRequestSeasons": {
+    "message": "Request seasons ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogRequestedBy": {
+    "message": "Requested by $NAME$",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestStatePending": {
+    "message": "awaiting approval"
+  },
+  "requestStateApproved": {
+    "message": "approved"
+  },
+  "requestStateDeclined": {
+    "message": "declined"
+  },
+  "requestStateFailed": {
+    "message": "failed"
+  },
+  "requestStateCompleted": {
+    "message": "completed"
+  },
+  "requestMore": {
+    "message": "Request…"
   }
 }

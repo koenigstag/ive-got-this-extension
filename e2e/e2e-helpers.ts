@@ -153,6 +153,53 @@ export const mockResponses = {
     },
   },
 
+  mediaDetailsSeries: {
+    type: 'MEDIA_DETAILS_RESPONSE',
+    payload: {
+      serverType: 'emby',
+      mediaType: 'series',
+      server: {
+        state: 'found',
+        name: 'The Mentalist',
+        year: 2008,
+        itemUrl: 'http://localhost:8096/web/index.html#!/item?id=67890',
+      },
+      jellyseerr: {
+        state: 'found',
+        tmdbId: 5920,
+        title: 'The Mentalist',
+        year: 2008,
+        status: 'partial',
+        url: 'http://localhost:5055/tv/5920',
+        requestable: true,
+        requests: [],
+      },
+      seasons: [
+        {
+          seasonNumber: 1,
+          episodeCount: 7,
+          serverEpisodeCount: 7,
+          status: 'available',
+          requestable: false,
+        },
+        {
+          seasonNumber: 2,
+          episodeCount: 23,
+          serverEpisodeCount: 0,
+          status: 'not_requested',
+          requestable: true,
+        },
+        {
+          seasonNumber: 3,
+          episodeCount: 24,
+          serverEpisodeCount: 0,
+          status: 'not_requested',
+          requestable: true,
+        },
+      ],
+    },
+  },
+
   requestMediaSuccess: {
     type: 'REQUEST_MEDIA_RESPONSE',
     payload: { success: true, message: 'Request submitted.' },

@@ -127,4 +127,48 @@ test.describe('Trakt — content script injection', () => {
     await expect(firstItem).toHaveId('media-connector-wtw-item');
     await expect(firstItem).toContainText('Emby');
   });
+
+  test('the Where to Watch item opens a dialog that requests the chosen seasons', async ({
+    page,
+  }) => {
+    await setupContentScript(page, 'trakt-app-show.html', {
+      CHECK_MEDIA: mockResponses.checkMediaAvailable,
+      GET_MEDIA_DETAILS: mockResponses.mediaDetailsSeries,
+      REQUEST_MEDIA: mockResponses.requestMediaSuccess,
+    });
+
+    await page.locator('#media-connector-wtw-item').click();
+
+    const dialog = page.locator('#media-connector-dialog-host dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText('On Emby: The Mentalist');
+    await expect(dialog).toContainText('7 of 7 on the server');
+
+    const seasons = dialog.locator('.seasons input');
+    await expect(seasons).toHaveCount(3);
+    await expect(seasons.nth(0)).toBeDisabled();
+    await seasons.nth(1).uncheck();
+
+    await dialog.getByRole('button', { name: 'Request seasons (1)' }).click();
+    await expect(dialog).toContainText('Request submitted.');
+
+    const sent = await page.evaluate(
+      () =>
+        (window as unknown as { __sentMessages: { type: string; payload: unknown }[] })
+          .__sentMessages,
+    );
+    expect(sent.find((m) => m.type === 'GET_MEDIA_DETAILS')?.payload).toMatchObject({
+      title: 'Менталист',
+      year: 2008,
+      mediaType: 'series',
+    });
+    expect(sent.find((m) => m.type === 'REQUEST_MEDIA')?.payload).toMatchObject({
+      tmdbId: '5920',
+      mediaType: 'series',
+      seasons: [3],
+    });
+
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#media-connector-dialog-host')).toHaveCount(0);
+  });
 });

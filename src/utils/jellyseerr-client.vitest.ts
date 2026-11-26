@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Effect } from 'effect';
 import {
+  getJellyseerrMediaDetailsEffect,
   jellyseerrSearch,
   jellyseerrSearchEffect,
   requestMovie,
@@ -395,5 +396,40 @@ describe('testJellyseerrConnection', () => {
 
     const result = await testJellyseerrConnection(config);
     expect(result).toBe(false);
+  });
+});
+
+describe('getJellyseerrMediaDetailsEffect', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('gets a TV show in the given language with the API key', async () => {
+    const details = { id: 5920, name: 'Менталист', seasons: [] };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(details) }),
+    );
+
+    const result = await Effect.runPromise(
+      getJellyseerrMediaDetailsEffect(config, 'tv', 5920, 'ru'),
+    );
+
+    expect(result).toEqual(details);
+    const [url, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://jellyseerr.example.com/api/v1/tv/5920?language=ru');
+    expect((options.headers as Record<string, string>)['X-Api-Key']).toBe('js-api-key-123');
+  });
+
+  it('fails with the status when Jellyseerr does not know the title', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('') }),
+    );
+
+    const result = await Effect.runPromise(
+      Effect.either(getJellyseerrMediaDetailsEffect(config, 'movie', 1)),
+    );
+    expect(result._tag).toBe('Left');
   });
 });
