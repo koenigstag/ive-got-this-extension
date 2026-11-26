@@ -1,6 +1,7 @@
 import { Option } from 'effect';
 import type { DetectedMedia, SourceSite } from '../types/index.js';
 import { getIviTitleSlug } from './content-script-helpers.js';
+import { kinopoiskQueries, readKinopoiskTitle } from './sites/kinopoisk-page.js';
 
 /**
  * Identify the current site from the URL.
@@ -21,6 +22,7 @@ export const identifySite = (url: string): SourceSite => {
   if (hostname.includes('justwatch.com')) return 'justwatch';
   // ivi.ru sends visitors outside Russia to ivi.tv, which runs the same site.
   if (/(^|\.)ivi\.(ru|tv)$/.test(hostname)) return 'ivi';
+  if (/^(www\.)?kinopoisk\.ru$/.test(hostname)) return 'kinopoisk';
 
   return 'unknown';
 };
@@ -53,6 +55,8 @@ export const detectMedia = (): DetectedMedia | undefined => {
       return detectFromJustWatch();
     case 'ivi':
       return detectFromIvi();
+    case 'kinopoisk':
+      return detectFromKinopoisk();
     default:
       return undefined;
   }
@@ -746,4 +750,18 @@ const detectFromIvi = (): DetectedMedia | undefined => {
 
   // Episode pages are treated as the show: the card is about the series.
   return isSeries ? { type: 'series', title, year } : { type: 'movie', title, year };
+};
+
+/**
+ * Detect the title on a Kinopoisk film or series page (`/film/<id>/`,
+ * `/series/<id>/`) from its JSON-LD: the original title when there is one
+ * (TMDB's own), else the Russian one, with the year.
+ */
+const detectFromKinopoisk = (): DetectedMedia | undefined => {
+  const page = readKinopoiskTitle(document, window.location.href);
+  if (!page) return undefined;
+  const title = kinopoiskQueries(page)[0];
+  return page.mediaType === 'movie'
+    ? { type: 'movie', title, year: page.year }
+    : { type: 'series', title, year: page.year };
 };

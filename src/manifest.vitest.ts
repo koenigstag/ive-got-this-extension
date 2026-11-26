@@ -59,6 +59,8 @@ const PAGES = [
   'https://www.ivi.ru/watch/109140',
   'https://www.ivi.ru/watch/himera',
   'https://www.ivi.tv/watch/himera',
+  'https://www.kinopoisk.ru/film/301/',
+  'https://www.kinopoisk.ru/series/404900/',
 ];
 
 describe('manifest.json', () => {

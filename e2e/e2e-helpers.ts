@@ -48,6 +48,9 @@ export const fixtureUrls: Record<string, string> = {
   'amazon-series.html': 'https://www.amazon.com/gp/video/detail/B07QJ2J5HP',
   'ivi-movie.html': 'https://www.ivi.ru/watch/109140',
   'ivi-series.html': 'https://www.ivi.ru/watch/himera',
+  'kinopoisk-movie.html': 'https://www.kinopoisk.ru/film/301/',
+  'kinopoisk-series.html': 'https://www.kinopoisk.ru/series/404900/',
+  'kinopoisk-russian.html': 'https://www.kinopoisk.ru/film/41519/',
 };
 
 /** Standard mock responses used across tests. */

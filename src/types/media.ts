@@ -69,4 +69,5 @@ export type SourceSite =
   | 'yandex'
   | 'justwatch'
   | 'ivi'
+  | 'kinopoisk'
   | 'unknown';
