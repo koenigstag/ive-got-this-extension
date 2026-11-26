@@ -36,6 +36,18 @@ describe('identifySite', () => {
     expect(identifySite('https://www.bing.com/search?q=the+matrix')).toBe('bing');
   });
 
+  it('identifies Yandex on yandex.ru, ya.ru and yandex.com', () => {
+    expect(identifySite('https://yandex.ru/search/?text=matrix')).toBe('yandex');
+    expect(identifySite('https://www.yandex.ru/search/?text=matrix')).toBe('yandex');
+    expect(identifySite('https://ya.ru/search/?text=matrix')).toBe('yandex');
+    expect(identifySite('https://yandex.com/search/?text=matrix')).toBe('yandex');
+  });
+
+  it('does not take other Yandex services or look-alike hosts for Yandex search', () => {
+    expect(identifySite('https://music.yandex.ru/search?text=matrix')).toBe('unknown');
+    expect(identifySite('https://yandex.ru.example.com/search/?text=matrix')).toBe('unknown');
+  });
+
   it('identifies JustWatch', () => {
     expect(identifySite('https://www.justwatch.com/us/movie/the-matrix')).toBe('justwatch');
   });
@@ -279,6 +291,153 @@ describe('detectMedia', () => {
 
       const result = detectMedia();
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe('Yandex detection', () => {
+    const atYandex = (url = 'https://yandex.ru/search/?text=test'): void => {
+      Object.defineProperty(window, 'location', {
+        value: new URL(url),
+        writable: true,
+        configurable: true,
+      });
+    };
+
+    const loadYandexFixture = (file: string, url: string): void => {
+      atYandex(url);
+      const html = readFileSync(resolve(E2E_FIXTURES, file), 'utf-8');
+      const parsed = new DOMParser().parseFromString(html, 'text/html');
+      document.head.innerHTML = parsed.head.innerHTML;
+      document.body.innerHTML = parsed.body.innerHTML;
+    };
+
+    /** The header across the top of the page, as Yandex shows it for most films. */
+    const header = (title: string, subtitle: string, tilesType: string): string => `
+      <div class="EntityHeader EntityHeader_hasTiles EntityHeader_isMovieRedesign">
+        <div class="EntityHeader-Title" title="${title}">${title}</div>
+        <div class="EntityHeader-Subtitle"><div class="EntityHeader-SubtitleText">${subtitle}</div></div>
+      </div>
+      <div class="EntitySearchTiles EntitySearchTiles_cols_52 EntitySearchTiles_type_${tilesType}"></div>
+      <div class="serp-item card__narrow"><div class="EntityCard EntityCard_headless EntityCard_film"></div></div>
+    `;
+
+    /** The right-column card with a header of its own, as yandex.ru and yandex.com show it. */
+    const card = (title: string, subtitle: string | null, description = ''): string => `
+      <div class="card__narrow">
+        <div class="EntityCard EntityCard_film">
+          <div class="CardHeader">
+            <h2 class="CardHeader-Title">${title}</h2>
+            ${
+              subtitle === null
+                ? ''
+                : `<div class="CardHeader-Subtitle"><div class="RatingLine CardHeader-RatingLine"><span class="RatingLine-Item">Рейтинг 8,7 из 10</span></div>${subtitle}</div>`
+            }
+          </div>
+          <div class="EntityCardRichText"><p class="RichFactdown-Paragraph">${description}</p></div>
+        </div>
+      </div>
+    `;
+
+    it('detects a film from the header on the movie fixture', () => {
+      loadYandexFixture('yandex-movie.html', 'https://yandex.ru/search/?text=matrix+1999');
+      expect(detectMedia()).toEqual({ type: 'movie', title: 'Матрица', year: 1999 });
+    });
+
+    it('detects a series from the right-column card on the series fixture', () => {
+      loadYandexFixture('yandex-series.html', 'https://ya.ru/search/?text=breaking+bad');
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Во все тяжкие', year: 2008 });
+    });
+
+    it('takes the type of a header from the tiles and the first year of a run', () => {
+      atYandex();
+      document.body.innerHTML = header(
+        'Во все тяжкие',
+        '2008-2013, драма, США, 5 сезонов, 47 мин, 18+',
+        'series',
+      );
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Во все тяжкие', year: 2008 });
+    });
+
+    it('detects an animated film as a movie', () => {
+      atYandex();
+      document.body.innerHTML = header(
+        'Холодное сердце',
+        '2013, мультфильм, США, 102 мин, 0+',
+        'film',
+      );
+      expect(detectMedia()).toEqual({ type: 'movie', title: 'Холодное сердце', year: 2013 });
+    });
+
+    it('detects an animated series from the card subtitle, without a year when there is none', () => {
+      atYandex();
+      document.body.innerHTML = card('Атака титанов', 'Shingeki no kyojin, мультсериал');
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Атака титанов' });
+    });
+
+    it('reads a card subtitle that starts with a capital letter', () => {
+      atYandex();
+      document.body.innerHTML = card('Слово пацана. Кровь на асфальте', 'Сериал, 2023');
+      expect(detectMedia()).toEqual({
+        type: 'series',
+        title: 'Слово пацана. Кровь на асфальте',
+        year: 2023,
+      });
+    });
+
+    it('does not take a year in the original title for the release year', () => {
+      atYandex();
+      document.body.innerHTML = card('Бегущий по лезвию 2049', 'Blade Runner 2049, фильм, 2017');
+      expect(detectMedia()).toEqual({
+        type: 'movie',
+        title: 'Бегущий по лезвию 2049',
+        year: 2017,
+      });
+    });
+
+    it('reads the type and a film year from the description on yandex.com', () => {
+      atYandex('https://yandex.com/search/?text=the+matrix+1999+film');
+      document.body.innerHTML = card(
+        'The Matrix',
+        null,
+        '1999 science fiction action film written and directed by the Wachowskis. The first installment in the Matrix film series.',
+      );
+      expect(detectMedia()).toEqual({ type: 'movie', title: 'The Matrix', year: 1999 });
+    });
+
+    it('reads a series from the description on yandex.com', () => {
+      atYandex('https://yandex.com/search/?text=breaking+bad');
+      document.body.innerHTML = card(
+        'Breaking Bad',
+        null,
+        'American neo-Western crime drama television series created by Vince Gilligan for AMC. It ran from 2008 to 2013.',
+      );
+      expect(detectMedia()).toEqual({ type: 'series', title: 'Breaking Bad' });
+    });
+
+    it('skips a franchise card that is neither a film nor a series', () => {
+      atYandex('https://yandex.com/search/?text=the+matrix');
+      document.body.innerHTML = card(
+        'The Matrix',
+        null,
+        'The Matrix is an American cyberpunk media franchise consisting of four feature films. It began in 1999.',
+      );
+      expect(detectMedia()).toBeUndefined();
+    });
+
+    it('skips results without a film or series card', () => {
+      atYandex();
+      document.body.innerHTML = `
+        <div class="EntityHeader"><div class="EntityHeader-Title" title="Киану Ривз">Киану Ривз</div></div>
+        <div class="EntitySearchTiles EntitySearchTiles_type_person"></div>
+        <div class="card__narrow"><div class="EntityCard EntityCard_person"></div></div>
+      `;
+      expect(detectMedia()).toBeUndefined();
+    });
+
+    it('skips a page with no entity at all', () => {
+      atYandex();
+      document.body.innerHTML = `<ul id="search-result"><li class="serp-item">погода</li></ul>`;
+      expect(detectMedia()).toBeUndefined();
     });
   });
 
