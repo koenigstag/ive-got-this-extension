@@ -419,6 +419,25 @@ describe('popup-view language', () => {
     expect(built.ui?.language).to.equal('ru');
   });
 
+  it('keeps the Prowlarr address', async () => {
+    const saved: ExtensionConfig = {
+      ...DEFAULT_CONFIG,
+      ui: { language: 'en' },
+      prowlarr: { serverUrl: 'http://prowlarr.lab.home' },
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+
+    const el = await fixture<PopupView>(html`<popup-view></popup-view>`);
+    await settle(el);
+
+    const input = el.shadowRoot?.querySelector('#prowlarr-url') as HTMLInputElement;
+    expect(input.value).to.equal('http://prowlarr.lab.home');
+    input.value = ' http://prowlarr.lab.vpn ';
+    input.dispatchEvent(new Event('input'));
+    const built = (el as unknown as { _buildConfig: () => ExtensionConfig })._buildConfig();
+    expect(built.prowlarr?.serverUrl).to.equal('http://prowlarr.lab.vpn');
+  });
+
   it('opens in the saved language', async () => {
     const saved: ExtensionConfig = { ...DEFAULT_CONFIG, ui: { language: 'ru' } };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));

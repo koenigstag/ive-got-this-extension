@@ -20,6 +20,7 @@ As you browse titles on IMDb, Trakt, TMDB, TheTVDB, Netflix, Amazon Prime Video,
 - **Deep Integration:** Injects native-feeling UI elements (badges, sidebars, and buttons) into IMDb, Trakt, TMDB, TheTVDB, JustWatch, Netflix, Amazon, ivi, Kinopoisk, and Shikimori.
 - **Search Engine Enhancement:** Adds a dedicated media status sidebar to Google, Bing and Yandex (yandex.ru, ya.ru, yandex.com) search results.
 - **One button, one dialog:** Each title, on the sites and in the search sidebar, gets one button (the server name when you have it, otherwise Request) that opens a dialog with the title's state on your server and in Jellyseerr, its requests, and for a series the episodes per season. From there you play it on the server or request a movie or the seasons you pick.
+- **Titles Jellyseerr doesn't know:** When Jellyseerr finds nothing (often a title with no TMDB entry), the card still shows the title if your server has it under that name, and with a Prowlarr address set in the settings it offers "Find a release", which opens Prowlarr's search for the title.
 - **Smart Deep Linking:** Jump directly from a discovery site to the playback page on your own Emby or Jellyfin instance.
 - **Mobile Optimized:** Full support for Microsoft Edge on Android and iOS with touch-friendly controls.
 

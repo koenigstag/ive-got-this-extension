@@ -200,6 +200,25 @@
       }
     }
   },
+  "foundOnServerByName": {
+    "message": "Найдено по названию «$QUERY$». В Jellyseerr его нет (нет в TMDB), запросить его там нельзя.",
+    "placeholders": {
+      "query": {
+        "content": "$1"
+      }
+    }
+  },
+  "findRelease": {
+    "message": "Найти раздачу"
+  },
+  "findReleaseHint": {
+    "message": "Искать «$QUERY$» в Prowlarr",
+    "placeholders": {
+      "query": {
+        "content": "$1"
+      }
+    }
+  },
   "extensionSettings": {
     "message": "Настройки расширения"
   },
@@ -322,6 +341,12 @@
   },
   "popupTestingJellyseerr": {
     "message": "Проверяю Jellyseerr…"
+  },
+  "popupProwlarrHint": {
+    "message": "Необязательно. Для тайтлов, которых нет в Jellyseerr (нет в TMDB), в карточке появится кнопка «Найти раздачу»: она открывает поиск тайтла в Prowlarr, а выбранная раздача уходит в его клиент загрузки."
+  },
+  "popupProwlarrUrl": {
+    "message": "Адрес Prowlarr"
   },
   "popupSave": {
     "message": "Сохранить настройки"

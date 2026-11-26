@@ -73,6 +73,9 @@ export class PopupView extends ComponentMixin(LitElement) {
   @state()
   private _language: UiLanguage = 'auto';
 
+  @state()
+  private _prowlarrUrl = '';
+
   override connectedCallback(): void {
     super.connectedCallback();
     this._loadSettings();
@@ -90,6 +93,7 @@ export class PopupView extends ComponentMixin(LitElement) {
     this._jellyseerrLocalUrl = config.jellyseerr.localServerUrl;
     this._jellyseerrApiKey = config.jellyseerr.apiKey;
     this._language = config.ui?.language ?? 'auto';
+    this._prowlarrUrl = config.prowlarr?.serverUrl ?? '';
     setLanguage(this._language);
   }
 
@@ -109,6 +113,9 @@ export class PopupView extends ComponentMixin(LitElement) {
       },
       ui: {
         language: this._language,
+      },
+      prowlarr: {
+        serverUrl: this._prowlarrUrl.trim(),
       },
     };
   }
@@ -289,7 +296,7 @@ export class PopupView extends ComponentMixin(LitElement) {
       <div class="popup-container">
         ${this._renderHeader()} ${this._renderLanguageSection()} ${this._renderServerSection()}
         ${this._renderConnectionSection()} ${this._renderJellyseerrSection()}
-        ${this._renderActions()} ${this._renderFooter()}
+        ${this._renderProwlarrSection()} ${this._renderActions()} ${this._renderFooter()}
       </div>
     `;
   }
@@ -436,6 +443,33 @@ export class PopupView extends ComponentMixin(LitElement) {
       return html`<div class="status status-loading status-inline">${t('popupProbingLocal')}</div>`;
     }
     return nothing;
+  }
+
+  /**
+   * Prowlarr: only its address, for the "Find a release" button on cards for
+   * titles Jellyseerr can't find. The search runs in Prowlarr's own page.
+   */
+  private _renderProwlarrSection() {
+    return html`
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">🔎 Prowlarr</div>
+        </div>
+        <div class="form-group">
+          <label for="prowlarr-url">${t('popupProwlarrUrl')}</label>
+          <input
+            id="prowlarr-url"
+            type="url"
+            placeholder="http://prowlarr.lab.home"
+            .value="${this._prowlarrUrl}"
+            @input="${(e: Event) => {
+              this._prowlarrUrl = (e.target as HTMLInputElement).value;
+            }}"
+          />
+          <span class="form-hint">${t('popupProwlarrHint')}</span>
+        </div>
+      </div>
+    `;
   }
 
   private _renderJellyseerrSection() {

@@ -4,6 +4,7 @@ export type {
   JellyseerrConfig,
   ExtensionConfig,
   UiConfig,
+  ProwlarrConfig,
   UiLanguage,
 } from './config.js';
 export { DEFAULT_CONFIG } from './config.js';

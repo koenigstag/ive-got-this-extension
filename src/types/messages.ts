@@ -230,6 +230,16 @@ export interface SearchJellyseerrResponse {
     readonly jellyseerrUrl?: string;
     readonly serverUrl?: string;
     readonly error?: string;
+    /**
+     * When Jellyseerr has no result (a title without a TMDB entry, say): the
+     * title on the media server, found there by its name and year.
+     */
+    readonly serverMatch?: {
+      readonly status: 'available' | 'partial';
+      readonly itemUrl: string;
+    };
+    /** Prowlarr's address, for the "Find a release" button; absent when not set up. */
+    readonly prowlarrUrl?: string;
   };
 }
 

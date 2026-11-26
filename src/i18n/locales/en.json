@@ -200,6 +200,25 @@
       }
     }
   },
+  "foundOnServerByName": {
+    "message": "Found by the title \"$QUERY$\": Jellyseerr doesn't know it (no TMDB entry), so it can't be requested.",
+    "placeholders": {
+      "query": {
+        "content": "$1"
+      }
+    }
+  },
+  "findRelease": {
+    "message": "Find a release"
+  },
+  "findReleaseHint": {
+    "message": "Search Prowlarr for \"$QUERY$\"",
+    "placeholders": {
+      "query": {
+        "content": "$1"
+      }
+    }
+  },
   "extensionSettings": {
     "message": "Extension settings"
   },
@@ -322,6 +341,12 @@
   },
   "popupTestingJellyseerr": {
     "message": "Testing Jellyseerr..."
+  },
+  "popupProwlarrHint": {
+    "message": "Optional. For titles Jellyseerr can't find (no TMDB entry), cards get a \"Find a release\" button that opens Prowlarr's search for the title; the release you pick goes to Prowlarr's download client."
+  },
+  "popupProwlarrUrl": {
+    "message": "Prowlarr URL"
   },
   "popupSave": {
     "message": "Save Settings"

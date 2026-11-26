@@ -34,6 +34,7 @@ import {
   withTimeoutEffect,
   buildDetectedMediaFromMessage,
   buildServerItemUrl,
+  nameCoversTitle,
 } from './service-worker-helpers.js';
 
 // ---------------------------------------------------------------------------
@@ -450,6 +451,50 @@ const detailsToCandidate = (
   mediaInfo: details.mediaInfo,
 });
 
+/**
+ * Find a title on the media server by its name and year, as the status
+ * indicator does (CHECK_MEDIA). Never fails: no match, an error or a timeout
+ * all come back as undefined.
+ */
+const findOnServerByName = (
+  config: ExtensionConfig,
+  query: SearchJellyseerrMessage['payload'],
+): Effect.Effect<{ status: 'available' | 'partial'; itemUrl: string } | undefined> =>
+  Effect.gen(function* () {
+    const media = buildDetectedMediaFromMessage({
+      title: query.query,
+      year: query.year,
+      mediaType: query.mediaType === 'movie' ? 'movie' : 'series',
+    });
+    const availability = yield* withTimeoutEffect(
+      checkMediaAvailabilityEffect(config, media),
+      6000,
+    );
+    if (availability?.status !== 'available' && availability?.status !== 'partial') {
+      return undefined;
+    }
+    if (!nameCoversTitle(availability.item.Name, query.query)) {
+      console.log(
+        `[Media Connector] Server item "${availability.item.Name}" is not "${query.query}"`,
+      );
+      return undefined;
+    }
+    return {
+      status: availability.status,
+      itemUrl: buildServerItemUrl(
+        config.server.serverType,
+        availability.serverUrl,
+        availability.item.Id,
+        availability.item.ServerId,
+      ),
+    };
+  }).pipe(
+    Effect.catchAll((e) => {
+      console.warn('[Media Connector] Server lookup by name failed:', e);
+      return Effect.succeed(undefined);
+    }),
+  );
+
 const handleSearchJellyseerr = (message: SearchJellyseerrMessage): Effect.Effect<unknown> =>
   Effect.gen(function* () {
     const config = yield* loadConfigEffect;
@@ -595,6 +640,13 @@ const handleSearchJellyseerr = (message: SearchJellyseerrMessage): Effect.Effect
         { concurrency: 'unbounded' },
       );
 
+      // Nothing in Jellyseerr (often a title TMDB doesn't have): it may still
+      // be on the server, downloaded by hand, so look it up there by name.
+      const serverMatch =
+        results.length === 0 && serverConfigured
+          ? yield* findOnServerByName(config, message.payload)
+          : undefined;
+
       return {
         type: 'SEARCH_JELLYSEERR_RESPONSE',
         payload: {
@@ -603,6 +655,8 @@ const handleSearchJellyseerr = (message: SearchJellyseerrMessage): Effect.Effect
           serverType: config.server.serverType,
           jellyseerrUrl,
           serverUrl,
+          serverMatch,
+          prowlarrUrl: config.prowlarr?.serverUrl.trim().replace(/\/+$/, '') || undefined,
         },
       };
     }).pipe(
