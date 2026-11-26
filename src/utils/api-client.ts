@@ -244,6 +244,28 @@ export const getEpisodesEffect = (
   });
 
 /**
+ * Get the episodes of a series that are on the server. Jellyfin and Emby can
+ * also list missing ones (placeholders from the metadata), which
+ * `IsMissing=false` leaves out.
+ */
+export const getEpisodesOnServerEffect = (
+  config: ExtensionConfig,
+  seriesId: string,
+): Effect.Effect<MediaSearchResult, ServerResponseError | NetworkError> =>
+  Effect.gen(function* () {
+    const baseUrl = yield* getResolvedBaseUrlEffect(config);
+    const params = new URLSearchParams({
+      IsMissing: 'false',
+      EnableImages: 'false',
+      EnableUserData: 'false',
+    });
+    return yield* fetchJson<MediaSearchResult>(
+      `${baseUrl}/Shows/${seriesId}/Episodes?${params.toString()}`,
+      { headers: buildApiHeaders(config) },
+    );
+  });
+
+/**
  * Verify connectivity to the media server.
  * Never fails — returns `false` on any error.
  */

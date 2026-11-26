@@ -6,6 +6,8 @@ export type ExtensionMessage =
   | CheckMediaResponse
   | RequestMediaMessage
   | RequestMediaResponse
+  | GetMediaDetailsMessage
+  | MediaDetailsResponse
   | SearchJellyseerrMessage
   | SearchJellyseerrResponse
   | GetConfigMessage
@@ -77,6 +79,97 @@ export interface RequestMediaMessage {
     readonly imdbId?: string;
     readonly tmdbId?: string;
     readonly mediaType: 'movie' | 'series';
+    /** Seasons to request for a series; every season that is not there yet when absent. */
+    readonly seasons?: readonly number[];
+  };
+}
+
+/** Jellyseerr's state of a title or season. */
+export type MediaStatusLabel =
+  | 'available'
+  | 'partial'
+  | 'pending'
+  | 'processing'
+  | 'unknown'
+  | 'not_requested';
+
+/** State of a Jellyseerr request. */
+export type MediaRequestState = 'pending' | 'approved' | 'declined' | 'failed' | 'completed';
+
+/**
+ * Request for everything the media dialog shows about a title: what the media
+ * server has, and what Jellyseerr knows and can request.
+ */
+export interface GetMediaDetailsMessage {
+  readonly type: 'GET_MEDIA_DETAILS';
+  readonly payload: {
+    readonly title: string;
+    readonly year?: number;
+    readonly imdbId?: string;
+    readonly tmdbId?: string;
+    readonly mediaType: 'movie' | 'series';
+  };
+}
+
+/** The title on the media server. */
+export type MediaDetailsServer =
+  | { readonly state: 'unconfigured' }
+  | { readonly state: 'missing' }
+  | { readonly state: 'error'; readonly message: string }
+  | {
+      readonly state: 'found';
+      readonly name: string;
+      readonly year?: number;
+      readonly itemUrl: string;
+    };
+
+/** The title in Jellyseerr. */
+export type MediaDetailsJellyseerr =
+  | { readonly state: 'disabled' }
+  | { readonly state: 'not_found' }
+  | { readonly state: 'error'; readonly message: string }
+  | {
+      readonly state: 'found';
+      readonly tmdbId: number;
+      readonly title: string;
+      readonly year?: number;
+      readonly status: MediaStatusLabel;
+      /** The title's page in Jellyseerr. */
+      readonly url: string;
+      /** A movie that can be requested, or a series with a season that can. */
+      readonly requestable: boolean;
+      readonly requests: readonly {
+        readonly state: MediaRequestState;
+        readonly requestedBy?: string;
+        readonly createdAt?: string;
+      }[];
+    };
+
+/** One season of a series in the media dialog. */
+export interface MediaDetailsSeason {
+  readonly seasonNumber: number;
+  /** Episodes in the season, as Jellyseerr (TMDB) lists them. */
+  readonly episodeCount?: number;
+  /** Episodes of the season on the media server. */
+  readonly serverEpisodeCount?: number;
+  /** Jellyseerr's state of the season; absent without Jellyseerr. */
+  readonly status?: MediaStatusLabel;
+  /** Whether Jellyseerr takes a request for the season. */
+  readonly requestable: boolean;
+}
+
+/**
+ * Response with the media dialog's details.
+ */
+export interface MediaDetailsResponse {
+  readonly type: 'MEDIA_DETAILS_RESPONSE';
+  readonly payload: {
+    readonly serverType: 'emby' | 'jellyfin';
+    readonly mediaType: 'movie' | 'series';
+    readonly server: MediaDetailsServer;
+    readonly jellyseerr: MediaDetailsJellyseerr;
+    /** Seasons of a series (specials left out); empty for a movie. */
+    readonly seasons: readonly MediaDetailsSeason[];
   };
 }
 

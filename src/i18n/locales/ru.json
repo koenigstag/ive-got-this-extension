@@ -356,5 +356,151 @@
         "content": "$1"
       }
     }
+  },
+  "dialogClose": {
+    "message": "Закрыть"
+  },
+  "dialogLoading": {
+    "message": "Загрузка…"
+  },
+  "dialogLoadFailed": {
+    "message": "Не удалось загрузить данные: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogServerUnconfigured": {
+    "message": "$SERVER$ не настроен в расширении.",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogNotOnServer": {
+    "message": "Нет на сервере $SERVER$.",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogOnServer": {
+    "message": "Есть на сервере $SERVER$:",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogServerError": {
+    "message": "$SERVER$ не ответил: $ERROR$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      },
+      "error": {
+        "content": "$2"
+      }
+    }
+  },
+  "dialogOpenOnServer": {
+    "message": "Открыть в $SERVER$",
+    "placeholders": {
+      "server": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogJellyseerrDisabled": {
+    "message": "Jellyseerr не настроен в расширении."
+  },
+  "dialogJellyseerrNotFound": {
+    "message": "Jellyseerr не нашёл этот тайтл."
+  },
+  "dialogJellyseerrError": {
+    "message": "Jellyseerr не ответил: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogOpenInJellyseerr": {
+    "message": "Открыть в Jellyseerr"
+  },
+  "dialogSeasons": {
+    "message": "Сезоны"
+  },
+  "dialogSeason": {
+    "message": "Сезон $NUMBER$",
+    "placeholders": {
+      "number": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogEpisodes": {
+    "message": "серий: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogEpisodesOnServer": {
+    "message": "на сервере $HAVE$ из $TOTAL$",
+    "placeholders": {
+      "have": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "dialogEpisodesOnServerOnly": {
+    "message": "на сервере: $HAVE$",
+    "placeholders": {
+      "have": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogRequestSeasons": {
+    "message": "Запросить сезоны ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "dialogRequestedBy": {
+    "message": "Запрос от $NAME$",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestStatePending": {
+    "message": "ждёт одобрения"
+  },
+  "requestStateApproved": {
+    "message": "одобрен"
+  },
+  "requestStateDeclined": {
+    "message": "отклонён"
+  },
+  "requestStateFailed": {
+    "message": "не выполнен"
+  },
+  "requestStateCompleted": {
+    "message": "выполнен"
+  },
+  "requestMore": {
+    "message": "Запросить…"
   }
 }

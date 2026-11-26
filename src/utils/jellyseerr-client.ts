@@ -242,6 +242,26 @@ export const requestTvShowEffect = (
   });
 
 /**
+ * Get Jellyseerr's details of a movie or TV show: its TMDB data (title, dates,
+ * seasons) and `mediaInfo` with the availability and requests.
+ */
+export const getJellyseerrMediaDetailsEffect = (
+  config: ExtensionConfig,
+  mediaType: 'movie' | 'tv',
+  tmdbId: number,
+  language = 'en',
+): Effect.Effect<JellyseerrMediaDetails, JellyseerrError | NetworkError> =>
+  Effect.gen(function* () {
+    const baseUrl = yield* getResolvedBaseUrlEffect(config);
+    const url = `${baseUrl}/api/v1/${mediaType}/${tmdbId}?language=${encodeURIComponent(language)}`;
+    return yield* fetchJellyseerr<JellyseerrMediaDetails>(
+      url,
+      { headers: buildJellyseerrHeaders(config), credentials: 'omit' },
+      baseUrl,
+    );
+  });
+
+/**
  * Test Jellyseerr server connectivity.
  * Never fails — returns `false` on any error.
  */
@@ -364,6 +384,51 @@ export interface JellyseerrMediaRequest {
   readonly id: number;
   readonly status: number;
   readonly requestedBy: { readonly displayName: string };
+}
+
+/** A season's state in Jellyseerr (`status` uses the media status codes above). */
+export interface JellyseerrSeasonStatus {
+  readonly seasonNumber: number;
+  readonly status: number;
+}
+
+/**
+ * A request in a title's details.
+ *
+ * status values: 1 = Pending approval, 2 = Approved, 3 = Declined,
+ * 4 = Failed, 5 = Completed
+ */
+export interface JellyseerrRequestDetails {
+  readonly id: number;
+  readonly status: number;
+  readonly createdAt?: string;
+  readonly requestedBy?: { readonly displayName?: string };
+  readonly seasons?: readonly JellyseerrSeasonStatus[];
+}
+
+/**
+ * Jellyseerr's details of a movie (`/api/v1/movie/{id}`) or TV show
+ * (`/api/v1/tv/{id}`), cut down to what the extension reads.
+ */
+export interface JellyseerrMediaDetails {
+  readonly id: number;
+  /** Movie title */
+  readonly title?: string;
+  /** TV show name */
+  readonly name?: string;
+  readonly releaseDate?: string;
+  readonly firstAirDate?: string;
+  /** TV show seasons as TMDB lists them */
+  readonly seasons?: readonly {
+    readonly seasonNumber: number;
+    readonly episodeCount?: number;
+    readonly name?: string;
+  }[];
+  readonly mediaInfo?: {
+    readonly status: number;
+    readonly seasons?: readonly JellyseerrSeasonStatus[];
+    readonly requests?: readonly JellyseerrRequestDetails[];
+  };
 }
 
 /**

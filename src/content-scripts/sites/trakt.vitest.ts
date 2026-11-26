@@ -24,6 +24,12 @@ vi.mock('../index.js', () => ({
   buildPayload: vi.fn(),
 }));
 
+// Mock the dialog, keep its target helper
+vi.mock('../media-dialog.js', async () => {
+  const actual = await vi.importActual('../media-dialog.js');
+  return { ...actual, openMediaDialog: vi.fn() };
+});
+
 // Mock MutationObserver
 const mockDisconnect = vi.fn();
 const mockObserve = vi.fn();
@@ -36,6 +42,7 @@ const mockObserve = vi.fn();
 
 import { sendMessage, handleRequestClick } from '../common-ui.js';
 import { tryDetectMedia, buildPayload } from '../index.js';
+import { openMediaDialog } from '../media-dialog.js';
 
 describe('Trakt Injection', () => {
   beforeEach(() => {
@@ -204,7 +211,46 @@ describe('Trakt Injection', () => {
       const item = document.getElementById('media-connector-wtw-item');
       expect(item).to.exist;
       expect(item?.innerHTML).to.contain('Emby');
-      expect(item?.querySelector('a')?.href).to.equal('https://emby.test/item/123');
+
+      // The item opens the media dialog for the title on the page
+      vi.mocked(tryDetectMedia).mockReturnValue({ type: 'movie', title: 'The Matrix', year: 1999 });
+      item?.click();
+      expect(openMediaDialog).toHaveBeenCalledWith({
+        title: 'The Matrix',
+        year: 1999,
+        imdbId: undefined,
+        tmdbId: undefined,
+        mediaType: 'movie',
+      });
+    });
+
+    it('falls back to the server link when the page shows no title', () => {
+      const open = vi.spyOn(window, 'open').mockReturnValue(null);
+      vi.mocked(tryDetectMedia).mockReturnValue(undefined);
+      tryInjectTraktItem({
+        type: 'CHECK_MEDIA_RESPONSE',
+        payload: { status: 'available', serverType: 'emby', itemUrl: 'https://emby.test/item/123' },
+      });
+
+      document.getElementById('media-connector-wtw-item')?.click();
+      expect(openMediaDialog).not.toHaveBeenCalled();
+      expect(open).toHaveBeenCalledWith('https://emby.test/item/123', '_blank');
+      open.mockRestore();
+    });
+
+    it('opens the dialog from the keyboard', () => {
+      vi.mocked(tryDetectMedia).mockReturnValue({ type: 'series', title: 'Breaking Bad' });
+      tryInjectTraktItem({
+        type: 'CHECK_MEDIA_RESPONSE',
+        payload: { status: 'unconfigured', serverType: 'jellyfin' },
+      });
+
+      const item = document.getElementById('media-connector-wtw-item');
+      expect(item?.getAttribute('role')).to.equal('button');
+      item?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      expect(openMediaDialog).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Breaking Bad', mediaType: 'series' }),
+      );
     });
 
     it('finds Where to Watch on app.trakt.tv whatever the UI language', () => {
@@ -268,10 +314,13 @@ describe('Trakt Injection', () => {
       tryInjectTraktItem(response);
 
       const item = document.getElementById('media-connector-wtw-item');
-      expect(item?.innerHTML).to.contain('Request');
+      expect(item?.textContent).to.contain('Request…');
 
+      // Requesting happens in the dialog, not on the click
+      vi.mocked(tryDetectMedia).mockReturnValue({ type: 'movie', title: 'The Matrix' });
       item?.click();
-      expect(handleRequestClick).toHaveBeenCalled();
+      expect(handleRequestClick).not.toHaveBeenCalled();
+      expect(openMediaDialog).toHaveBeenCalled();
     });
 
     it('injects Unconfigured item when unconfigured', () => {
