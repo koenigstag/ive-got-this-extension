@@ -4,6 +4,7 @@ import { buildCheckPayloadEffect } from './content-script-helpers.js';
 import type { JellyseerrResultItem, SearchJellyseerrResponse } from '../types/messages.js';
 import { t } from '../i18n/index.js';
 import { dialogTargetFromResult, openMediaDialog } from './media-dialog.js';
+import { prowlarrSvg } from '../assets/prowlarr-icon.svg.js';
 
 /**
  * Detect media from the current page, returning `undefined` when nothing is found.
@@ -343,7 +344,9 @@ export const createNotFoundRows = (
   }
 
   if (prowlarrUrl) {
-    const find = createActionButton(`🔎 ${t('findRelease')}`, '#5c6370', '#474c56');
+    const find = createActionButton(t('findRelease'), '#5c6370', '#474c56');
+    Object.assign(find.style, { display: 'inline-flex', alignItems: 'center', gap: '6px' });
+    find.insertAdjacentHTML('afterbegin', prowlarrSvg(14));
     find.dataset.action = 'find-release';
     find.title = t('findReleaseHint', queryTitle);
     find.addEventListener('click', () => {

@@ -63,6 +63,7 @@ describe('search-sidebar', () => {
     expect(infoRow?.querySelector('.play-on-server')?.textContent).to.contain('Play on Jellyfin');
     const find = infoRow?.querySelector('.find-release');
     expect(find?.textContent).to.contain('Find a release');
+    expect(find?.querySelector('svg[viewBox="0 0 1024 1024"]')).to.exist; // Prowlarr's logo
     expect(find?.getAttribute('title')).to.equal('Search Prowlarr for "Холод"');
   });
 

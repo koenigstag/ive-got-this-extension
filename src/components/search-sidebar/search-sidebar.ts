@@ -12,6 +12,7 @@ import {
 import { dialogTargetFromResult, openMediaDialog } from '../../content-scripts/media-dialog.js';
 import type { SearchJellyseerrResponse, JellyseerrResultItem } from '../../types/messages.js';
 import { t } from '../../i18n/index.js';
+import { prowlarrSvg } from '../../assets/prowlarr-icon.svg.js';
 
 export class SearchSidebar extends LitElement {
   @property({ type: Object })
@@ -113,6 +114,9 @@ export class SearchSidebar extends LitElement {
     }
 
     .not-found-actions button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 5px 12px;
       border: none;
       border-radius: 6px;
@@ -282,7 +286,7 @@ export class SearchSidebar extends LitElement {
                   @click="${() =>
                     void openInNewTab(buildProwlarrSearchUrl(prowlarrUrl, this.queryTitle))}"
                 >
-                  🔎 ${t('findRelease')}
+                  ${unsafeHTML(prowlarrSvg(14))} ${t('findRelease')}
                 </button>`
               : nothing}
           </div>`
